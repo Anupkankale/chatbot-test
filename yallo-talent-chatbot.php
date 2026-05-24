@@ -6,6 +6,7 @@
  * Version: 1.0.3
  * Author: Anup
  * Author URI: https://anupkankale.com
+   
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: yallo-chatbot
