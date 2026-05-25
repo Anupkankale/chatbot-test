@@ -1,11 +1,11 @@
 /**
- * YALLO Newsletter Popup - JavaScript
+ * DevXpert Newsletter Popup - JavaScript
  */
 
 (function($) {
     'use strict';
     
-    const YALLO_NEWSLETTER = {
+    const DEVXPERT_NEWSLETTER = {
         
         // State
         hasShown: false,
@@ -34,15 +34,15 @@
          * Cache DOM elements
          */
         cacheDom: function() {
-            this.$popup = $('#yallo-newsletter-popup');
-            this.$overlay = $('.yallo-newsletter-overlay');
-            this.$closeBtn = $('#yallo-newsletter-close');
-            this.$form = $('#yallo-newsletter-form');
-            this.$nameInput = $('#yallo-newsletter-name');
-            this.$emailInput = $('#yallo-newsletter-email');
-            this.$submitBtn = $('#yallo-newsletter-submit');
-            this.$successMsg = $('#yallo-newsletter-success');
-            this.$errorMsg = $('#yallo-newsletter-error');
+            this.$popup = $('#devxpert-newsletter-popup');
+            this.$overlay = $('.devxpert-newsletter-overlay');
+            this.$closeBtn = $('#devxpert-newsletter-close');
+            this.$form = $('#devxpert-newsletter-form');
+            this.$nameInput = $('#devxpert-newsletter-name');
+            this.$emailInput = $('#devxpert-newsletter-email');
+            this.$submitBtn = $('#devxpert-newsletter-submit');
+            this.$successMsg = $('#devxpert-newsletter-success');
+            this.$errorMsg = $('#devxpert-newsletter-error');
         },
         
         /**
@@ -82,17 +82,17 @@
          */
         checkAndShow: function() {
             // Check if already shown (cookie)
-            if (yalloNewsletter.showOnce && this.getCookie('yallo_newsletter_shown')) {
+            if (devxpertNewsletter.showOnce && this.getCookie('devxpert_newsletter_shown')) {
                 return;
             }
             
             // Check if already subscribed (localStorage)
-            if (localStorage.getItem('yallo_newsletter_subscribed')) {
+            if (localStorage.getItem('devxpert_newsletter_subscribed')) {
                 return;
             }
             
             // Show after delay
-            const delay = parseInt(yalloNewsletter.delay) || 5000;
+            const delay = parseInt(devxpertNewsletter.delay) || 5000;
             
             setTimeout(() => {
                 this.showPopup();
@@ -109,8 +109,8 @@
             this.$popup.fadeIn(300);
             
             // Set cookie if show once enabled
-            if (yalloNewsletter.showOnce) {
-                this.setCookie('yallo_newsletter_shown', '1', 30); // 30 days
+            if (devxpertNewsletter.showOnce) {
+                this.setCookie('devxpert_newsletter_shown', '1', 30); // 30 days
             }
             
             // Focus on email input
@@ -156,11 +156,11 @@
             
             // Submit via AJAX
             $.ajax({
-                url: yalloNewsletter.ajaxUrl,
+                url: devxpertNewsletter.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'yallo_newsletter_subscribe',
-                    nonce: yalloNewsletter.nonce,
+                    action: 'devxpert_newsletter_subscribe',
+                    nonce: devxpertNewsletter.nonce,
                     name: name,
                     email: email,
                     page_url: window.location.href
@@ -172,7 +172,7 @@
                         self.showSuccess();
                         
                         // Mark as subscribed
-                        localStorage.setItem('yallo_newsletter_subscribed', '1');
+                        localStorage.setItem('devxpert_newsletter_subscribed', '1');
                         
                         // Close after 3 seconds
                         setTimeout(() => {
@@ -256,7 +256,7 @@
     
     // Initialize on document ready
     $(document).ready(function() {
-        YALLO_NEWSLETTER.init();
+        DEVXPERT_NEWSLETTER.init();
     });
     
 })(jQuery);
@@ -264,7 +264,7 @@
 // Add shake animation CSS
 const style = document.createElement('style');
 style.textContent = `
-    .yallo-newsletter-form.shake {
+    .devxpert-newsletter-form.shake {
         animation: shake 0.5s;
     }
     

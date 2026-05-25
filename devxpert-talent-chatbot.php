@@ -1,7 +1,8 @@
 <?php
 /**
- * Plugin Name:DevXpert Chatbot
+ * Plugin Name: DevXpert Chatbot
  * Plugin URI: https://devxpert.com
+ * Update URI: https://devxpert.com/plugins/devxpert-chatbot
  * Description: An intelligent chatbot for DevXpert talent acquisition and consultation services with a sleek dark theme interface and Claude AI integration.
  * Version: 1.0.3
  * Author: Anup
@@ -9,7 +10,7 @@
    
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: yallo-chatbot
+ * Text Domain: devxpert-chatbot
  * Domain Path: /languages
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -21,26 +22,84 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('YALLO_CHATBOT_VERSION', '1.0.3');
-define('YALLO_CHATBOT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('YALLO_CHATBOT_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('YALLO_CHATBOT_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define('DEVXPERT_CHATBOT_VERSION', '1.0.3');
+define('DEVXPERT_CHATBOT_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('DEVXPERT_CHATBOT_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('DEVXPERT_CHATBOT_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Load RAG AI handler
-if (file_exists(YALLO_CHATBOT_PLUGIN_DIR . 'yallo-chatbot-rag-ai.php')) {
-    require_once YALLO_CHATBOT_PLUGIN_DIR . 'yallo-chatbot-rag-ai.php';
+if (file_exists(DEVXPERT_CHATBOT_PLUGIN_DIR . 'devxpert-chatbot-rag-ai.php')) {
+    require_once DEVXPERT_CHATBOT_PLUGIN_DIR . 'devxpert-chatbot-rag-ai.php';
 }
 
 /**
  * Main Plugin Class
  */
-class YALLO_Talent_Chatbot {
+class DEVXPERT_Talent_Chatbot {
     
     /**
      * Single instance of the class
      */
     private static $instance = null;
     
+    /**
+     * Return the configured brand name.
+     */
+    private function get_brand_name() {
+        return get_option('devxpert_brand_name', 'DevXpert');
+    }
+
+    /**
+     * Return the configured chatbot title.
+     */
+    private function get_chatbot_title() {
+        return get_option('devxpert_chatbot_title', $this->get_brand_name() . ' Talent Assistant');
+    }
+
+    /**
+     * Return the configured chatbot subtitle.
+     */
+    private function get_chatbot_subtitle() {
+        return get_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
+    }
+
+    /**
+     * Return the configured brand accent color.
+     */
+    private function get_brand_accent_color() {
+        $color = get_option('devxpert_brand_accent_color', '#BFA25E');
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? $color : '#BFA25E';
+    }
+
+    /**
+     * Return inline brand CSS variables for plugin frontends.
+     */
+    private function get_frontend_brand_css() {
+        $accent = $this->get_brand_accent_color();
+
+        return "
+        .devxpert-chatbot-wrapper,
+        .devxpert-newsletter-overlay {
+            --devxpert-accent: {$accent};
+            --devxpert-accent-strong: {$accent};
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }";
+    }
+
+    /**
+     * Return inline brand CSS variables for plugin admin pages.
+     */
+    private function get_admin_brand_css() {
+        $accent = $this->get_brand_accent_color();
+
+        return "
+        .devxpert-admin {
+            --dx-accent: {$accent};
+            --dx-accent-strong: {$accent};
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }";
+    }
+
     /**
      * Get single instance
      */
@@ -62,6 +121,9 @@ class YALLO_Talent_Chatbot {
      * Initialize WordPress hooks
      */
     private function init_hooks() {
+        // Migrate legacy YALLO keys/tables before settings/pages read them.
+        add_action('admin_init', array($this, 'maybe_migrate_yallo_data'), 1);
+
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         
@@ -69,54 +131,82 @@ class YALLO_Talent_Chatbot {
         add_action('wp_footer', array($this, 'render_chatbot'));
         
         // Register AJAX endpoints
-        add_action('wp_ajax_yallo_submit_lead', array($this, 'handle_lead_submission'));
-        add_action('wp_ajax_nopriv_yallo_submit_lead', array($this, 'handle_lead_submission'));
+        add_action('wp_ajax_devxpert_submit_lead', array($this, 'handle_lead_submission'));
+        add_action('wp_ajax_nopriv_devxpert_submit_lead', array($this, 'handle_lead_submission'));
         
         // Register lead update AJAX endpoint (for early lead capture)
-        add_action('wp_ajax_yallo_update_lead', array($this, 'handle_lead_update'));
-        add_action('wp_ajax_nopriv_yallo_update_lead', array($this, 'handle_lead_update'));
+        add_action('wp_ajax_devxpert_update_lead', array($this, 'handle_lead_update'));
+        add_action('wp_ajax_nopriv_devxpert_update_lead', array($this, 'handle_lead_update'));
         
         // Load chatbot questions dynamically
-        add_action('wp_ajax_yallo_get_questions', array($this, 'get_chatbot_questions'));
-        add_action('wp_ajax_nopriv_yallo_get_questions', array($this, 'get_chatbot_questions'));
+        add_action('wp_ajax_devxpert_get_questions', array($this, 'get_chatbot_questions'));
+        add_action('wp_ajax_nopriv_devxpert_get_questions', array($this, 'get_chatbot_questions'));
         
         // Register newsletter AJAX endpoints
-        add_action('wp_ajax_yallo_newsletter_subscribe', array($this, 'handle_newsletter_subscription'));
-        add_action('wp_ajax_nopriv_yallo_newsletter_subscribe', array($this, 'handle_newsletter_subscription'));
+        add_action('wp_ajax_devxpert_newsletter_subscribe', array($this, 'handle_newsletter_subscription'));
+        add_action('wp_ajax_nopriv_devxpert_newsletter_subscribe', array($this, 'handle_newsletter_subscription'));
         
         // AI AJAX endpoints
-        add_action('wp_ajax_yallo_ai_chat', array($this, 'handle_ai_chat'));
-        add_action('wp_ajax_nopriv_yallo_ai_chat', array($this, 'handle_ai_chat'));
-        add_action('wp_ajax_yallo_test_ai', array($this, 'handle_test_ai'));
+        add_action('wp_ajax_devxpert_ai_chat', array($this, 'handle_ai_chat'));
+        add_action('wp_ajax_nopriv_devxpert_ai_chat', array($this, 'handle_ai_chat'));
+        add_action('wp_ajax_devxpert_test_ai', array($this, 'handle_test_ai'));
         
         // Register admin menu
         add_action('admin_menu', array($this, 'add_admin_menu'));
         
         // Register settings
         add_action('admin_init', array($this, 'register_settings'));
+
+        // Admin assets for plugin pages
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         
         // Add settings link on plugins page
-        add_filter('plugin_action_links_' . YALLO_CHATBOT_PLUGIN_BASENAME, array($this, 'add_settings_link'));
+        add_filter('plugin_action_links_' . DEVXPERT_CHATBOT_PLUGIN_BASENAME, array($this, 'add_settings_link'));
 
         // Hook into WordPress mailer to apply SMTP settings
         add_action('phpmailer_init', array($this, 'configure_smtp'));
 
         // Simple API test
-        add_action('wp_ajax_yallo_test_api_simple', array($this, 'handle_test_api_simple'));
+        add_action('wp_ajax_devxpert_test_api_simple', array($this, 'handle_test_api_simple'));
 
         // SMTP test email
-        add_action('wp_ajax_yallo_smtp_test', array($this, 'handle_smtp_test'));
+        add_action('wp_ajax_devxpert_smtp_test', array($this, 'handle_smtp_test'));
 
         // Lead status update
-        add_action('wp_ajax_yallo_update_lead_status', array($this, 'handle_update_lead_status'));
+        add_action('wp_ajax_devxpert_update_lead_status', array($this, 'handle_update_lead_status'));
 
         // CSV export (admin_post: non-AJAX file download)
-        add_action('admin_post_yallo_export_leads', array($this, 'handle_export_leads'));
+        add_action('admin_post_devxpert_export_leads', array($this, 'handle_export_leads'));
 
         // DB upgrade check
         add_action('admin_init', array($this, 'maybe_upgrade_db'));
     }
     
+    /**
+     * Enqueue admin-only assets for this plugin's pages.
+     */
+    public function enqueue_admin_assets($hook) {
+        if (strpos($hook, 'devxpert-chatbot') === false) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'devxpert-inter-font',
+            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+            array(),
+            null
+        );
+
+        wp_enqueue_style(
+            'devxpert-chatbot-admin',
+            DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            DEVXPERT_CHATBOT_VERSION
+        );
+
+        wp_add_inline_style('devxpert-chatbot-admin', $this->get_admin_brand_css());
+    }
+
     /**
      * Enqueue CSS and JavaScript
      */
@@ -126,39 +216,49 @@ class YALLO_Talent_Chatbot {
             return;
         }
 
-        $version = YALLO_CHATBOT_VERSION;
+        $version = DEVXPERT_CHATBOT_VERSION;
+
+        wp_enqueue_style(
+            'devxpert-inter-font',
+            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+            array(),
+            null
+        );
 
         // ─────────────────────────────────────────────────────────
         // NEWSLETTER: Loads independently — NOT affected by chatbot toggle
         // ─────────────────────────────────────────────────────────
-        if (get_option('yallo_newsletter_enabled', false)) {
+        if (get_option('devxpert_newsletter_enabled', false)) {
             wp_enqueue_style(
-                'yallo-newsletter-styles',
-                YALLO_CHATBOT_PLUGIN_URL . 'assets/css/newsletter.css',
+                'devxpert-newsletter-styles',
+                DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/css/newsletter.css',
                 array(),
                 $version
             );
 
             wp_enqueue_script(
-                'yallo-newsletter-script',
-                YALLO_CHATBOT_PLUGIN_URL . 'assets/js/newsletter.js',
+                'devxpert-newsletter-script',
+                DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/js/newsletter.js',
                 array('jquery'),
                 $version,
                 true
             );
 
-            wp_localize_script('yallo-newsletter-script', 'yalloNewsletter', array(
+            wp_localize_script('devxpert-newsletter-script', 'devxpertNewsletter', array(
                 'ajaxUrl'   => admin_url('admin-ajax.php'),
-                'nonce'     => wp_create_nonce('yallo_chatbot_nonce'),
-                'delay'     => get_option('yallo_newsletter_delay', 5000),
-                'showOnce'  => get_option('yallo_newsletter_show_once', true),
+                'nonce'     => wp_create_nonce('devxpert_chatbot_nonce'),
+                'delay'     => get_option('devxpert_newsletter_delay', 5000),
+                'showOnce'  => get_option('devxpert_newsletter_show_once', true),
+                'brandName' => $this->get_brand_name(),
             ));
+
+            wp_add_inline_style('devxpert-newsletter-styles', $this->get_frontend_brand_css());
         }
 
         // ─────────────────────────────────────────────────────────
         // CHATBOT: Has its own enable/page restriction checks
         // ─────────────────────────────────────────────────────────
-        if (!get_option('yallo_chatbot_enabled', true)) {
+        if (!get_option('devxpert_chatbot_enabled', true)) {
             return;
         }
 
@@ -168,39 +268,44 @@ class YALLO_Talent_Chatbot {
 
         // Enqueue chatbot styles
         wp_enqueue_style(
-            'yallo-chatbot-styles',
-            YALLO_CHATBOT_PLUGIN_URL . 'assets/css/chatbot.css',
+            'devxpert-chatbot-styles',
+            DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/css/chatbot.css',
             array(),
             $version
         );
 
         // Enqueue chatbot scripts
         wp_enqueue_script(
-            'yallo-chatbot-script',
-            YALLO_CHATBOT_PLUGIN_URL . 'assets/js/chatbot.js',
+            'devxpert-chatbot-script',
+            DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/js/chatbot.js',
             array('jquery'),
             $version,
             true
         );
 
         // Localize chatbot script
-        wp_localize_script('yallo-chatbot-script', 'yalloChatbot', array(
+        wp_localize_script('devxpert-chatbot-script', 'devxpertChatbot', array(
             'ajaxUrl'       => admin_url('admin-ajax.php'),
-            'nonce'         => wp_create_nonce('yallo_chatbot_nonce'),
-            'autoOpen'      => get_option('yallo_chatbot_auto_open', true),
-            'scrollTrigger' => get_option('yallo_chatbot_scroll_trigger', 50),
-            'displayMode'   => get_option('yallo_chatbot_display_mode', 'all_pages'),
+            'nonce'         => wp_create_nonce('devxpert_chatbot_nonce'),
+            'autoOpen'      => get_option('devxpert_chatbot_auto_open', true),
+            'scrollTrigger' => get_option('devxpert_chatbot_scroll_trigger', 50),
+            'displayMode'   => get_option('devxpert_chatbot_display_mode', 'all_pages'),
             'currentUrl'    => home_url($_SERVER['REQUEST_URI']),
             'debug'         => defined('WP_DEBUG') && WP_DEBUG,
-            'aiEnabled'     => get_option('yallo_claude_api_key') ? true : false,
+            'aiEnabled'     => get_option('devxpert_claude_api_key') ? true : false,
+            'brandName'     => $this->get_brand_name(),
+            'chatTitle'     => $this->get_chatbot_title(),
+            'chatSubtitle'  => $this->get_chatbot_subtitle(),
         ));
+
+        wp_add_inline_style('devxpert-chatbot-styles', $this->get_frontend_brand_css());
     }
     
     /**
      * Check if chatbot should display on current page
      */
     private function should_display_on_current_page() {
-        $display_mode = get_option('yallo_chatbot_display_mode', 'all_pages');
+        $display_mode = get_option('devxpert_chatbot_display_mode', 'all_pages');
         
         // Display on all pages
         if ($display_mode === 'all_pages') {
@@ -214,7 +319,7 @@ class YALLO_Talent_Chatbot {
         
         // Display on specific pages only
         if ($display_mode === 'specific_pages') {
-            $specific_pages = get_option('yallo_chatbot_specific_pages', '');
+            $specific_pages = get_option('devxpert_chatbot_specific_pages', '');
             
             if (empty($specific_pages)) {
                 return false;
@@ -293,28 +398,28 @@ class YALLO_Talent_Chatbot {
         // ─────────────────────────────────────────────────────────
         // NEWSLETTER: Renders independently — NOT affected by chatbot toggle
         // ─────────────────────────────────────────────────────────
-        if (get_option('yallo_newsletter_enabled', false)) {
-            echo '<!-- YALLO Newsletter: Active -->';
-            include YALLO_CHATBOT_PLUGIN_DIR . 'templates/newsletter-popup.php';
+        if (get_option('devxpert_newsletter_enabled', false)) {
+            echo '<!-- DevXpert Newsletter: Active -->';
+            include DEVXPERT_CHATBOT_PLUGIN_DIR . 'templates/newsletter-popup.php';
         }
 
         // ─────────────────────────────────────────────────────────
         // CHATBOT: Has its own enable/page restriction checks
         // ─────────────────────────────────────────────────────────
-        if (!get_option('yallo_chatbot_enabled', true)) {
-            echo '<!-- YALLO Chatbot: Disabled in settings -->';
+        if (!get_option('devxpert_chatbot_enabled', true)) {
+            echo '<!-- DevXpert Chatbot: Disabled in settings -->';
             return;
         }
 
         if (!$this->should_display_on_current_page()) {
-            $display_mode = get_option('yallo_chatbot_display_mode', 'all_pages');
+            $display_mode = get_option('devxpert_chatbot_display_mode', 'all_pages');
             $current_url  = home_url($_SERVER['REQUEST_URI']);
-            echo '<!-- YALLO Chatbot: Not displayed on this page (Mode: ' . esc_html($display_mode) . ', URL: ' . esc_html($current_url) . ') -->';
+            echo '<!-- DevXpert Chatbot: Not displayed on this page (Mode: ' . esc_html($display_mode) . ', URL: ' . esc_html($current_url) . ') -->';
             return;
         }
 
-        echo '<!-- YALLO Chatbot: Active -->';
-        include YALLO_CHATBOT_PLUGIN_DIR . 'templates/chatbot.php';
+        echo '<!-- DevXpert Chatbot: Active -->';
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'templates/chatbot.php';
     }
     
     /**
@@ -322,7 +427,7 @@ class YALLO_Talent_Chatbot {
      */
     public function handle_lead_submission() {
         // Verify nonce
-        check_ajax_referer('yallo_chatbot_nonce', 'nonce');
+        check_ajax_referer('devxpert_chatbot_nonce', 'nonce');
         
         // Sanitize input data
         $lead_data = array(
@@ -351,7 +456,7 @@ class YALLO_Talent_Chatbot {
 
         // Save to database
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
 
         // Duplicate detection: return existing lead ID without re-inserting
         $existing_id = $wpdb->get_var($wpdb->prepare(
@@ -385,17 +490,17 @@ class YALLO_Talent_Chatbot {
      */
     public function configure_smtp( $phpmailer ) {
         // Only apply if SMTP is enabled
-        if ( ! get_option( 'yallo_smtp_enabled', false ) ) {
+        if ( ! get_option( 'devxpert_smtp_enabled', false ) ) {
             return;
         }
 
-        $host       = get_option( 'yallo_smtp_host', '' );
-        $port       = (int) get_option( 'yallo_smtp_port', 587 );
-        $username   = get_option( 'yallo_smtp_username', '' );
-        $password   = get_option( 'yallo_smtp_password', '' );
-        $encryption = get_option( 'yallo_smtp_encryption', 'tls' );
-        $from_email = get_option( 'yallo_smtp_from_email', get_option( 'admin_email' ) );
-        $from_name  = get_option( 'yallo_smtp_from_name', get_bloginfo( 'name' ) );
+        $host       = get_option( 'devxpert_smtp_host', '' );
+        $port       = (int) get_option( 'devxpert_smtp_port', 587 );
+        $username   = get_option( 'devxpert_smtp_username', '' );
+        $password   = get_option( 'devxpert_smtp_password', '' );
+        $encryption = get_option( 'devxpert_smtp_encryption', 'tls' );
+        $from_email = get_option( 'devxpert_smtp_from_email', get_option( 'admin_email' ) );
+        $from_name  = get_option( 'devxpert_smtp_from_name', get_bloginfo( 'name' ) );
 
         if ( empty( $host ) || empty( $username ) || empty( $password ) ) {
             return;
@@ -424,8 +529,8 @@ class YALLO_Talent_Chatbot {
             'Content-Type: text/html; charset=UTF-8',
         );
 
-        $from_name  = get_option( 'yallo_smtp_from_name', get_bloginfo( 'name' ) );
-        $from_email = get_option( 'yallo_smtp_from_email', get_option( 'admin_email' ) );
+        $from_name  = get_option( 'devxpert_smtp_from_name', get_bloginfo( 'name' ) );
+        $from_email = get_option( 'devxpert_smtp_from_email', get_option( 'admin_email' ) );
         $headers[]  = "From: {$from_name} <{$from_email}>";
 
         foreach ( $recipients as $recipient ) {
@@ -439,7 +544,9 @@ class YALLO_Talent_Chatbot {
      * Build a branded HTML email template
      */
     private function build_email_html( $title, $rows, $footer_note = '' ) {
-        $logo_color  = '#BFA25E';
+        $logo_color  = $this->get_brand_accent_color();
+        $brand_name  = esc_html($this->get_brand_name());
+        $chat_title  = esc_html($this->get_chatbot_title());
         $rows_html   = '';
 
         foreach ( $rows as $label => $value ) {
@@ -459,7 +566,7 @@ class YALLO_Talent_Chatbot {
         return "<!DOCTYPE html>
 <html>
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>
-<body style='margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;'>
+<body style='margin:0;padding:0;background:#f4f4f4;font-family:Inter,Arial,sans-serif;'>
   <table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f4;padding:30px 0;'>
     <tr><td align='center'>
       <table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);max-width:96%;'>
@@ -467,8 +574,8 @@ class YALLO_Talent_Chatbot {
         <!-- Header -->
         <tr>
           <td style='background:{$logo_color};padding:25px 30px;'>
-            <h1 style='margin:0;color:#000;font-size:22px;font-weight:700;'>YALLO</h1>
-            <p style='margin:5px 0 0;color:#000;font-size:13px;opacity:0.8;'>Talent &amp; Architecture Intelligence</p>
+            <h1 style='margin:0;color:#000;font-size:22px;font-weight:700;'>{$brand_name}</h1>
+            <p style='margin:5px 0 0;color:#000;font-size:13px;opacity:0.8;'>{$chat_title}</p>
           </td>
         </tr>
 
@@ -492,7 +599,7 @@ class YALLO_Talent_Chatbot {
         <tr>
           <td style='padding:15px 30px 30px;border-top:2px solid {$logo_color};'>
             <p style='font-size:13px;color:#666;margin:10px 0 0;'>
-              This notification was sent by <strong>YALLO Talent Chatbot</strong>.<br>
+              This notification was sent by <strong>{$chat_title}</strong>.<br>
               Received at: " . current_time('d M Y, H:i') . "
             </p>
             {$footer_html}
@@ -510,8 +617,8 @@ class YALLO_Talent_Chatbot {
      * Send email notification for new lead
      */
     private function send_lead_notification( $lead_data ) {
-        $to      = get_option( 'yallo_chatbot_notification_email', get_option( 'admin_email' ) );
-        $subject = '🔔 [YALLO] New Lead Captured: ' . $lead_data['name'];
+        $to      = get_option( 'devxpert_chatbot_notification_email', get_option( 'admin_email' ) );
+        $subject = '🔔 [' . $this->get_brand_name() . '] New Lead Captured: ' . $lead_data['name'];
 
         $rows = array(
             'Name'           => $lead_data['name'],
@@ -537,8 +644,8 @@ class YALLO_Talent_Chatbot {
      * Send email notification when a lead updates additional info
      */
     private function send_lead_update_notification( $email, $update_data ) {
-        $to      = get_option( 'yallo_chatbot_notification_email', get_option( 'admin_email' ) );
-        $subject = '✏️ [YALLO] Lead Updated: ' . $email;
+        $to      = get_option( 'devxpert_chatbot_notification_email', get_option( 'admin_email' ) );
+        $subject = '✏️ [' . $this->get_brand_name() . '] Lead Updated: ' . $email;
 
         $rows = array(
             'Email'        => $email,
@@ -559,8 +666,8 @@ class YALLO_Talent_Chatbot {
      * Send email notification for new newsletter subscriber
      */
     private function send_newsletter_notification( $email, $name ) {
-        $to      = get_option( 'yallo_chatbot_notification_email', get_option( 'admin_email' ) );
-        $subject = '📧 [YALLO] New Newsletter Subscriber: ' . $email;
+        $to      = get_option( 'devxpert_chatbot_notification_email', get_option( 'admin_email' ) );
+        $subject = '📧 [' . $this->get_brand_name() . '] New Newsletter Subscriber: ' . $email;
 
         $rows = array(
             'Name'       => $name,
@@ -568,7 +675,7 @@ class YALLO_Talent_Chatbot {
             'Subscribed' => current_time( 'mysql' ),
         );
 
-        $html = $this->build_email_html( 'New Newsletter Subscriber', $rows, 'Manage subscribers in YALLO Chatbot → Newsletter.' );
+        $html = $this->build_email_html( 'New Newsletter Subscriber', $rows, 'Manage subscribers in ' . $this->get_brand_name() . ' Chatbot → Newsletter.' );
         $this->send_email( $to, $subject, $html );
     }
 
@@ -576,7 +683,7 @@ class YALLO_Talent_Chatbot {
      * Handle lead update with additional information
      */
     public function handle_lead_update() {
-        check_ajax_referer( 'yallo_chatbot_nonce', 'nonce' );
+        check_ajax_referer( 'devxpert_chatbot_nonce', 'nonce' );
 
         $email = sanitize_email( $_POST['email'] ?? '' );
         if ( ! is_email( $email ) ) {
@@ -595,7 +702,7 @@ class YALLO_Talent_Chatbot {
         );
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
 
         $updated = $wpdb->update(
             $table_name,
@@ -632,7 +739,7 @@ class YALLO_Talent_Chatbot {
      * Handle newsletter subscription via AJAX
      */
     public function handle_newsletter_subscription() {
-        check_ajax_referer('yallo_chatbot_nonce', 'nonce');
+        check_ajax_referer('devxpert_chatbot_nonce', 'nonce');
         
         $email = sanitize_email($_POST['email'] ?? '');
         $name = sanitize_text_field($_POST['name'] ?? '');
@@ -643,7 +750,7 @@ class YALLO_Talent_Chatbot {
         }
         
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_newsletter_subscribers';
+        $table_name = $wpdb->prefix . 'devxpert_newsletter_subscribers';
         
         $existing = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM $table_name WHERE email = %s",
@@ -676,61 +783,130 @@ class YALLO_Talent_Chatbot {
     }
 
     /**
+     * Migrate legacy YALLO option keys and tables to DevXpert names.
+     */
+    public function maybe_migrate_yallo_data() {
+        if (get_option('devxpert_chatbot_migrated_from_yallo', false)) {
+            return;
+        }
+
+        global $wpdb;
+
+        $option_map = array(
+            'yallo_chatbot_enabled'            => 'devxpert_chatbot_enabled',
+            'yallo_chatbot_auto_open'          => 'devxpert_chatbot_auto_open',
+            'yallo_chatbot_scroll_trigger'     => 'devxpert_chatbot_scroll_trigger',
+            'yallo_chatbot_notification_email' => 'devxpert_chatbot_notification_email',
+            'yallo_chatbot_display_mode'       => 'devxpert_chatbot_display_mode',
+            'yallo_chatbot_specific_pages'     => 'devxpert_chatbot_specific_pages',
+            'yallo_chatbot_questions_json'     => 'devxpert_chatbot_questions_json',
+            'yallo_chatbot_questions'          => 'devxpert_chatbot_questions',
+            'yallo_chatbot_bypass_cache'       => 'devxpert_chatbot_bypass_cache',
+            'yallo_chatbot_db_version'         => 'devxpert_chatbot_db_version',
+            'yallo_newsletter_enabled'         => 'devxpert_newsletter_enabled',
+            'yallo_newsletter_delay'           => 'devxpert_newsletter_delay',
+            'yallo_newsletter_title'           => 'devxpert_newsletter_title',
+            'yallo_newsletter_description'     => 'devxpert_newsletter_description',
+            'yallo_newsletter_button_text'     => 'devxpert_newsletter_button_text',
+            'yallo_newsletter_show_once'       => 'devxpert_newsletter_show_once',
+            'yallo_smtp_enabled'               => 'devxpert_smtp_enabled',
+            'yallo_smtp_host'                  => 'devxpert_smtp_host',
+            'yallo_smtp_port'                  => 'devxpert_smtp_port',
+            'yallo_smtp_username'              => 'devxpert_smtp_username',
+            'yallo_smtp_password'              => 'devxpert_smtp_password',
+            'yallo_smtp_encryption'            => 'devxpert_smtp_encryption',
+            'yallo_smtp_from_email'            => 'devxpert_smtp_from_email',
+            'yallo_smtp_from_name'             => 'devxpert_smtp_from_name',
+            'yallo_claude_api_key'             => 'devxpert_claude_api_key',
+            'yallo_ai_enabled'                 => 'devxpert_ai_enabled',
+            'yallo_ai_fallback_message'        => 'devxpert_ai_fallback_message',
+        );
+
+        foreach ($option_map as $old_key => $new_key) {
+            if (get_option($new_key, null) !== null) {
+                continue;
+            }
+
+            $legacy_value = get_option($old_key, null);
+            if ($legacy_value !== null) {
+                add_option($new_key, $legacy_value);
+            }
+        }
+
+        $table_map = array(
+            $wpdb->prefix . 'yallo_chatbot_leads'           => $wpdb->prefix . 'devxpert_chatbot_leads',
+            $wpdb->prefix . 'yallo_newsletter_subscribers'  => $wpdb->prefix . 'devxpert_newsletter_subscribers',
+            $wpdb->prefix . 'yallo_knowledge_base'          => $wpdb->prefix . 'devxpert_knowledge_base',
+        );
+
+        foreach ($table_map as $old_table => $new_table) {
+            $old_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $old_table));
+            $new_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $new_table));
+
+            if ($old_exists && !$new_exists) {
+                $wpdb->query("RENAME TABLE `{$old_table}` TO `{$new_table}`");
+            }
+        }
+
+        update_option('devxpert_chatbot_migrated_from_yallo', 1);
+    }
+
+    /**
      * Add admin menu
      */
     public function add_admin_menu() {
         add_menu_page(
-            'YALLO Chatbot',
-            'YALLO Chatbot',
+            $this->get_brand_name() . ' Chatbot',
+            $this->get_brand_name() . ' Chatbot',
             'manage_options',
-            'yallo-chatbot',
+            'devxpert-chatbot',
             array($this, 'render_admin_page'),
             'dashicons-format-chat',
             30
         );
         
         add_submenu_page(
-            'yallo-chatbot',
+            'devxpert-chatbot',
             'Settings',
             'Settings',
             'manage_options',
-            'yallo-chatbot',
+            'devxpert-chatbot',
             array($this, 'render_admin_page')
         );
         
         add_submenu_page(
-            'yallo-chatbot',
+            'devxpert-chatbot',
             'Edit Questions',
             'Questions',
             'manage_options',
-            'yallo-chatbot-questions',
+            'devxpert-chatbot-questions',
             array($this, 'render_questions_page')
         );
         
         add_submenu_page(
-            'yallo-chatbot',
+            'devxpert-chatbot',
             'AI Settings',
             '🤖 AI Settings',
             'manage_options',
-            'yallo-chatbot-ai',
+            'devxpert-chatbot-ai',
             array($this, 'render_ai_settings_page')
         );
         
         add_submenu_page(
-            'yallo-chatbot',
+            'devxpert-chatbot',
             'Leads',
             'Leads',
             'manage_options',
-            'yallo-chatbot-leads',
+            'devxpert-chatbot-leads',
             array($this, 'render_leads_page')
         );
         
         add_submenu_page(
-            'yallo-chatbot',
+            'devxpert-chatbot',
             'Newsletter Subscribers',
             'Newsletter',
             'manage_options',
-            'yallo-chatbot-newsletter',
+            'devxpert-chatbot-newsletter',
             array($this, 'render_newsletter_page')
         );
     }
@@ -739,65 +915,69 @@ class YALLO_Talent_Chatbot {
      * Register plugin settings
      */
     public function register_settings() {
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_enabled');
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_auto_open');
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_scroll_trigger');
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_notification_email');
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_display_mode');
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_specific_pages');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_enabled');
+        register_setting('devxpert_chatbot_settings', 'devxpert_brand_name');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_title');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_subtitle');
+        register_setting('devxpert_chatbot_settings', 'devxpert_brand_accent_color');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_auto_open');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_scroll_trigger');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_notification_email');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_display_mode');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_specific_pages');
         
         // Chatbot questions
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_questions_json');
-        register_setting('yallo_chatbot_settings', 'yallo_chatbot_bypass_cache');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_questions_json');
+        register_setting('devxpert_chatbot_settings', 'devxpert_chatbot_bypass_cache');
 
         // Newsletter settings
-        register_setting('yallo_chatbot_settings', 'yallo_newsletter_enabled');
-        register_setting('yallo_chatbot_settings', 'yallo_newsletter_delay');
-        register_setting('yallo_chatbot_settings', 'yallo_newsletter_title');
-        register_setting('yallo_chatbot_settings', 'yallo_newsletter_description');
-        register_setting('yallo_chatbot_settings', 'yallo_newsletter_button_text');
-        register_setting('yallo_chatbot_settings', 'yallo_newsletter_show_once');
+        register_setting('devxpert_chatbot_settings', 'devxpert_newsletter_enabled');
+        register_setting('devxpert_chatbot_settings', 'devxpert_newsletter_delay');
+        register_setting('devxpert_chatbot_settings', 'devxpert_newsletter_title');
+        register_setting('devxpert_chatbot_settings', 'devxpert_newsletter_description');
+        register_setting('devxpert_chatbot_settings', 'devxpert_newsletter_button_text');
+        register_setting('devxpert_chatbot_settings', 'devxpert_newsletter_show_once');
 
         // SMTP settings
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_enabled');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_host');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_port');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_username');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_password');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_encryption');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_from_email');
-        register_setting('yallo_chatbot_settings', 'yallo_smtp_from_name');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_enabled');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_host');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_port');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_username');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_password');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_encryption');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_from_email');
+        register_setting('devxpert_chatbot_settings', 'devxpert_smtp_from_name');
         
         // AI settings
-        register_setting('yallo_chatbot_settings', 'yallo_claude_api_key');
-        register_setting('yallo_chatbot_settings', 'yallo_ai_enabled');
-        register_setting('yallo_chatbot_settings', 'yallo_ai_fallback_message');
+        register_setting('devxpert_chatbot_settings', 'devxpert_claude_api_key');
+        register_setting('devxpert_chatbot_settings', 'devxpert_ai_enabled');
+        register_setting('devxpert_chatbot_settings', 'devxpert_ai_fallback_message');
     }
 
     /**
      * Handle SMTP test email via AJAX
      */
     public function handle_smtp_test() {
-        check_ajax_referer( 'yallo_chatbot_nonce', 'nonce' );
+        check_ajax_referer( 'devxpert_chatbot_nonce', 'nonce' );
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( array( 'message' => 'Unauthorized' ) );
             return;
         }
 
-        $to = get_option( 'yallo_chatbot_notification_email', get_option( 'admin_email' ) );
+        $to = get_option( 'devxpert_chatbot_notification_email', get_option( 'admin_email' ) );
 
         $rows = array(
             'Status'  => 'SMTP connection successful ✅',
-            'Host'    => get_option( 'yallo_smtp_host' ),
-            'Port'    => get_option( 'yallo_smtp_port' ),
-            'From'    => get_option( 'yallo_smtp_from_email' ),
+            'Host'    => get_option( 'devxpert_smtp_host' ),
+            'Port'    => get_option( 'devxpert_smtp_port' ),
+            'From'    => get_option( 'devxpert_smtp_from_email' ),
             'Sent to' => $to,
             'Time'    => current_time( 'mysql' ),
         );
 
-        $html   = $this->build_email_html( 'SMTP Test Email', $rows, 'Your YALLO SMTP settings are working correctly.' );
-        $result = wp_mail( $to, '✅ [YALLO] SMTP Test Email', $html, array( 'Content-Type: text/html; charset=UTF-8' ) );
+        $html   = $this->build_email_html( 'SMTP Test Email', $rows, 'Your ' . $this->get_brand_name() . ' SMTP settings are working correctly.' );
+        $result = wp_mail( $to, '✅ [' . $this->get_brand_name() . '] SMTP Test Email', $html, array( 'Content-Type: text/html; charset=UTF-8' ) );
 
         if ( $result ) {
             wp_send_json_success( array( 'message' => 'Test email sent to ' . $to ) );
@@ -810,45 +990,77 @@ class YALLO_Talent_Chatbot {
      * Render admin settings page
      */
     public function render_admin_page() {
-        include YALLO_CHATBOT_PLUGIN_DIR . 'admin/settings.php';
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/settings.php';
     }
     
     /**
      * Render questions editor page
      */
     public function render_questions_page() {
-        include YALLO_CHATBOT_PLUGIN_DIR . 'admin/questions.php';
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/questions.php';
     }
     
     /**
      * Render AI settings page
      */
     public function render_ai_settings_page() {
-        include YALLO_CHATBOT_PLUGIN_DIR . 'admin/yallo-chatbot-rag-settings.php';
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/devxpert-chatbot-rag-settings.php';
     }
     
     /**
      * Render leads page
      */
     public function render_leads_page() {
-        include YALLO_CHATBOT_PLUGIN_DIR . 'admin/leads.php';
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/leads.php';
     }
     
     /**
      * Render newsletter subscribers page
      */
     public function render_newsletter_page() {
-        include YALLO_CHATBOT_PLUGIN_DIR . 'admin/newsletter.php';
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/newsletter.php';
+    }
+
+    /**
+     * Admin-only AI test handler used by the AI settings page.
+     */
+    public function handle_test_ai() {
+        check_ajax_referer('devxpert_ai_test', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Unauthorized'));
+            return;
+        }
+
+        $message = sanitize_text_field($_POST['message'] ?? '');
+        if ($message === '') {
+            wp_send_json_error(array('message' => 'Please enter a test question.'));
+            return;
+        }
+
+        if (!class_exists('DEVXPERT_Chatbot_RAG')) {
+            require_once DEVXPERT_CHATBOT_PLUGIN_DIR . 'devxpert-chatbot-rag-ai.php';
+        }
+
+        $rag      = new DEVXPERT_Chatbot_RAG();
+        $response = $rag->get_ai_response($message, array());
+
+        if ($response['success']) {
+            wp_send_json_success($response);
+            return;
+        }
+
+        wp_send_json_error($response);
     }
 
     /**
      * Handle AI chat via AJAX
      */
     public function handle_ai_chat() {
-        check_ajax_referer('yallo_chatbot_nonce', 'nonce');
+        check_ajax_referer('devxpert_chatbot_nonce', 'nonce');
 
         // Rate limiting: max 20 AI requests per IP per hour
-        $rate_key   = 'yallo_ai_rate_' . md5($this->get_client_ip());
+        $rate_key   = 'devxpert_ai_rate_' . md5($this->get_client_ip());
         $rate_count = (int) get_transient($rate_key);
         if ($rate_count >= 20) {
             wp_send_json_error(array('message' => 'Too many requests. Please try again later.'));
@@ -858,7 +1070,7 @@ class YALLO_Talent_Chatbot {
 
         $message = sanitize_text_field($_POST['message'] ?? '');
 
-        if (!get_option('yallo_claude_api_key')) {
+        if (!get_option('devxpert_claude_api_key')) {
             wp_send_json_error(array('message' => 'AI not configured. Please add your Claude API key in AI Settings.'));
             return;
         }
@@ -877,11 +1089,11 @@ class YALLO_Talent_Chatbot {
             );
         }, $history);
 
-        if (!class_exists('YALLO_Chatbot_RAG')) {
-            require_once YALLO_CHATBOT_PLUGIN_DIR . 'yallo-chatbot-rag-ai.php';
+        if (!class_exists('DEVXPERT_Chatbot_RAG')) {
+            require_once DEVXPERT_CHATBOT_PLUGIN_DIR . 'devxpert-chatbot-rag-ai.php';
         }
 
-        $rag      = new YALLO_Chatbot_RAG();
+        $rag      = new DEVXPERT_Chatbot_RAG();
         $response = $rag->get_ai_response($message, $history);
 
         if ($response['success']) {
@@ -895,14 +1107,14 @@ class YALLO_Talent_Chatbot {
      * Simple API key test
      */
     public function handle_test_api_simple() {
-        check_ajax_referer('yallo_chatbot_nonce', 'nonce');
+        check_ajax_referer('devxpert_chatbot_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Unauthorized'));
             return;
         }
         
-        $api_key = get_option('yallo_claude_api_key', '');
+        $api_key = get_option('devxpert_claude_api_key', '');
         
         if (empty($api_key)) {
             wp_send_json_error(array('message' => 'No API key configured. Please add your Claude API key and save settings.'));
@@ -979,7 +1191,7 @@ class YALLO_Talent_Chatbot {
      * Add settings link on plugins page
      */
     public function add_settings_link($links) {
-        $settings_link = '<a href="' . admin_url('admin.php?page=yallo-chatbot') . '">Settings</a>';
+        $settings_link = '<a href="' . admin_url('admin.php?page=devxpert-chatbot') . '">Settings</a>';
         array_unshift($links, $settings_link);
         return $links;
     }
@@ -988,50 +1200,66 @@ class YALLO_Talent_Chatbot {
      * Get chatbot questions via AJAX
      */
     public function get_chatbot_questions() {
-        $questions = get_option('yallo_chatbot_questions', null);
+        $questions_json = get_option('devxpert_chatbot_questions_json', '');
+        $questions      = get_option('devxpert_chatbot_questions', null);
+
+        if (!empty($questions_json)) {
+            $decoded_questions = json_decode($questions_json, true);
+            if (is_array($decoded_questions)) {
+                $questions = $decoded_questions;
+            }
+        }
         
         // If no custom questions, return defaults
         if (!$questions) {
             $questions = array(
                 'welcome' => array(
-                    'text' => "Hi, we're YALLO 👋\n\nHow can we help?"
+                    'text' => "Hi, we're " . $this->get_brand_name() . " 👋\n\nTell us what you're trying to solve and we'll point you to the fastest next step."
                 ),
                 'services' => array(
                     array(
-                        'text' => 'Hire tech talent / build a squad',
-                        'message' => "Great – tech talent & squads.\n\nVetted profiles across AI, Data, Cloud, SAP, Oracle, Salesforce & more – delivered in ~72 hrs.",
+                        'text' => 'Hire tech talent fast',
+                        'message' => "Great choice.\n\nWe help teams hire vetted specialists across AI, Data, Cloud, SAP, Oracle, Salesforce and more, often with qualified profiles shared in about 72 hours.",
                         'intent' => 'Hire tech talent / build a squad',
-                        'lead_type' => 'details'
+                        'lead_type' => 'details',
+                        'cta_primary' => '📋 Get matched candidate options',
+                        'cta_secondary' => '📞 Discuss my hiring need'
                     ),
                     array(
-                        'text' => 'Stabilise a troubled project',
-                        'message' => "Got it – stabilise a project.\n\nWe use architects & delivery leads to find and fix talent or role clarity gaps fast.",
+                        'text' => 'Rescue a delayed project',
+                        'message' => "Understood.\n\nWe can quickly assess delivery issues, identify role or capability gaps, and help you stabilise the project with hands-on leadership support.",
                         'intent' => 'Stabilise a troubled project',
-                        'lead_type' => 'call'
+                        'lead_type' => 'call',
+                        'cta_primary' => '📞 Book a recovery call',
+                        'cta_secondary' => '📋 Send my project brief'
                     ),
                     array(
-                        'text' => 'Enterprise Architecture / IT strategy',
-                        'message' => "Understood – EA / IT strategy.\n\nWe provide Chief Architect capacity to align roadmaps and talent – no big consulting lock-in.",
+                        'text' => 'Get architecture / IT strategy help',
+                        'message' => "Makes sense.\n\nWe provide architecture and strategy support to align delivery, platforms, and talent without locking you into a large consulting engagement.",
                         'intent' => 'Enterprise Architecture / IT strategy',
-                        'lead_type' => 'call'
+                        'lead_type' => 'call',
+                        'cta_primary' => '📞 Book a strategy call',
+                        'cta_secondary' => '📋 Share my roadmap challenge'
                     ),
                     array(
-                        'text' => 'Not sure / explore options',
-                        'message' => "No problem – we'll figure it out together.\n\nTell us a little and we'll recommend the right next step.",
+                        'text' => 'I need help choosing the right option',
+                        'message' => "No problem.\n\nShare a little context and we'll recommend the best route, whether that's talent support, project rescue, or strategic guidance.",
                         'intent' => 'Not sure / explore options',
-                        'lead_type' => 'details'
+                        'lead_type' => 'details',
+                        'cta_primary' => '📋 Recommend the right solution',
+                        'cta_secondary' => '📞 Talk it through with an expert'
                     )
                 ),
                 'consultation' => array(
-                    array('key' => 'name', 'text' => "What's your **full name?**"),
-                    array('key' => 'email', 'text' => "Thanks {name}! Your **work email?**"),
-                    array('key' => 'company', 'text' => "Your **company** name?"),
-                    array('key' => 'location', 'text' => "**Where** are you based?\n(e.g. Dubai, UAE)"),
-                    array('key' => 'industry', 'text' => "**Industry?**\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"),
-                    array('key' => 'platforms', 'text' => "**Core platform?**\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"),
-                    array('key' => 'capabilities', 'text' => "**Biggest gap?**\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"),
-                    array('key' => 'service_type', 'text' => "**What do you need?**\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"),
-                    array('key' => 'pain', 'text' => "In **one line** – what's the main challenge?")
+                    array('key' => 'name', 'text' => "Let's get this moving.\n\nWhat's your **full name?**"),
+                    array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can follow up with the right next step?"),
+                    array('key' => 'company', 'text' => "Which **company** are you with?"),
+                    array('key' => 'location', 'text' => "Where is your **team based**?\n(e.g. Dubai, UAE)"),
+                    array('key' => 'industry', 'text' => "Which **industry** best matches your business?\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"),
+                    array('key' => 'platforms', 'text' => "Which **core platform or ecosystem** matters most here?\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"),
+                    array('key' => 'capabilities', 'text' => "Where is the **biggest capability gap** right now?\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"),
+                    array('key' => 'service_type', 'text' => "What type of **support** are you looking for?\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"),
+                    array('key' => 'pain', 'text' => "What is the **main business or delivery challenge** you want solved?")
                 )
             );
         }
@@ -1043,25 +1271,25 @@ class YALLO_Talent_Chatbot {
      * DB upgrade: add columns introduced after initial release
      */
     public function maybe_upgrade_db() {
-        $db_version = get_option('yallo_chatbot_db_version', '1.0');
+        $db_version = get_option('devxpert_chatbot_db_version', '1.0');
         if (version_compare($db_version, '1.1', '>=')) {
             return;
         }
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
         $col = $wpdb->get_var("SHOW COLUMNS FROM $table_name LIKE 'status'");
         if (!$col) {
             $wpdb->query("ALTER TABLE $table_name ADD COLUMN status varchar(20) NOT NULL DEFAULT 'new' AFTER lead_type");
             $wpdb->query("ALTER TABLE $table_name ADD KEY status (status)");
         }
-        update_option('yallo_chatbot_db_version', '1.1');
+        update_option('devxpert_chatbot_db_version', '1.1');
     }
 
     /**
      * AJAX: update a lead's status (admin only)
      */
     public function handle_update_lead_status() {
-        check_ajax_referer('yallo_chatbot_nonce', 'nonce');
+        check_ajax_referer('devxpert_chatbot_nonce', 'nonce');
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Unauthorized'));
             return;
@@ -1077,7 +1305,7 @@ class YALLO_Talent_Chatbot {
         }
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
         $updated = $wpdb->update(
             $table_name,
             array('status' => $status),
@@ -1097,13 +1325,13 @@ class YALLO_Talent_Chatbot {
      * Admin POST: export all leads as CSV download
      */
     public function handle_export_leads() {
-        check_admin_referer('yallo_export_leads');
+        check_admin_referer('devxpert_export_leads');
         if (!current_user_can('manage_options')) {
             wp_die('Unauthorized');
         }
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
         $leads = $wpdb->get_results(
             "SELECT id, name, email, company, location, industry, platforms, capabilities,
                     service_type, pain, initial_intent, lead_type, status, page_url, created_at
@@ -1111,7 +1339,7 @@ class YALLO_Talent_Chatbot {
             ARRAY_A
         );
 
-        $filename = 'yallo-leads-' . date('Y-m-d') . '.csv';
+        $filename = 'devxpert-leads-' . date('Y-m-d') . '.csv';
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Pragma: no-cache');
@@ -1135,10 +1363,10 @@ class YALLO_Talent_Chatbot {
 /**
  * Plugin activation
  */
-function yallo_chatbot_activate() {
+function devxpert_chatbot_activate() {
     global $wpdb;
     
-    $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+    $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
     $charset_collate = $wpdb->get_charset_collate();
     
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
@@ -1169,7 +1397,7 @@ function yallo_chatbot_activate() {
     dbDelta($sql);
     
     // Create newsletter subscribers table
-    $newsletter_table = $wpdb->prefix . 'yallo_newsletter_subscribers';
+    $newsletter_table = $wpdb->prefix . 'devxpert_newsletter_subscribers';
     
     $newsletter_sql = "CREATE TABLE IF NOT EXISTS $newsletter_table (
         id bigint(20) NOT NULL AUTO_INCREMENT,
@@ -1186,57 +1414,61 @@ function yallo_chatbot_activate() {
     dbDelta($newsletter_sql);
     
     // Create AI knowledge base table
-    if (class_exists('YALLO_Chatbot_RAG')) {
-        YALLO_Chatbot_RAG::create_table();
+    if (class_exists('DEVXPERT_Chatbot_RAG')) {
+        DEVXPERT_Chatbot_RAG::create_table();
     }
     
     // Set default options
-    add_option('yallo_chatbot_enabled', true);
-    add_option('yallo_chatbot_auto_open', true);
-    add_option('yallo_chatbot_scroll_trigger', 50);
-    add_option('yallo_chatbot_notification_email', get_option('admin_email'));
-    add_option('yallo_chatbot_display_mode', 'all_pages');
-    add_option('yallo_chatbot_specific_pages', '');
+    add_option('devxpert_chatbot_enabled', true);
+    add_option('devxpert_brand_name', 'DevXpert');
+    add_option('devxpert_chatbot_title', 'DevXpert Talent Assistant');
+    add_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
+    add_option('devxpert_brand_accent_color', '#BFA25E');
+    add_option('devxpert_chatbot_auto_open', true);
+    add_option('devxpert_chatbot_scroll_trigger', 50);
+    add_option('devxpert_chatbot_notification_email', get_option('admin_email'));
+    add_option('devxpert_chatbot_display_mode', 'all_pages');
+    add_option('devxpert_chatbot_specific_pages', '');
     
     // Newsletter options
-    add_option('yallo_newsletter_enabled', false);
-    add_option('yallo_newsletter_delay', 5000);
-    add_option('yallo_newsletter_title', 'Stay Updated with YALLO');
-    add_option('yallo_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.');
-    add_option('yallo_newsletter_button_text', 'Subscribe Now');
-    add_option('yallo_newsletter_show_once', true);
+    add_option('devxpert_newsletter_enabled', false);
+    add_option('devxpert_newsletter_delay', 5000);
+    add_option('devxpert_newsletter_title', 'Stay Updated with ' . get_option('devxpert_brand_name', 'DevXpert'));
+    add_option('devxpert_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.');
+    add_option('devxpert_newsletter_button_text', 'Subscribe Now');
+    add_option('devxpert_newsletter_show_once', true);
 
     // SMTP options
-    add_option('yallo_smtp_enabled', false);
-    add_option('yallo_smtp_host', '');
-    add_option('yallo_smtp_port', 587);
-    add_option('yallo_smtp_username', '');
-    add_option('yallo_smtp_password', '');
-    add_option('yallo_smtp_encryption', 'tls');
-    add_option('yallo_smtp_from_email', get_option('admin_email'));
-    add_option('yallo_smtp_from_name', get_bloginfo('name'));
+    add_option('devxpert_smtp_enabled', false);
+    add_option('devxpert_smtp_host', '');
+    add_option('devxpert_smtp_port', 587);
+    add_option('devxpert_smtp_username', '');
+    add_option('devxpert_smtp_password', '');
+    add_option('devxpert_smtp_encryption', 'tls');
+    add_option('devxpert_smtp_from_email', get_option('admin_email'));
+    add_option('devxpert_smtp_from_name', get_bloginfo('name'));
     
     // AI options
-    add_option('yallo_claude_api_key', '');
-    add_option('yallo_ai_enabled', false);
-    add_option('yallo_ai_fallback_message', "I don't have specific information about that. Would you like to speak with our team?");
+    add_option('devxpert_claude_api_key', '');
+    add_option('devxpert_ai_enabled', false);
+    add_option('devxpert_ai_fallback_message', "I don't have specific information about that. Would you like to speak with our team?");
 }
-register_activation_hook(__FILE__, 'yallo_chatbot_activate');
+register_activation_hook(__FILE__, 'devxpert_chatbot_activate');
 
 /**
  * Plugin deactivation
  */
-function yallo_chatbot_deactivate() {
+function devxpert_chatbot_deactivate() {
     // Clean up if needed
 }
-register_deactivation_hook(__FILE__, 'yallo_chatbot_deactivate');
+register_deactivation_hook(__FILE__, 'devxpert_chatbot_deactivate');
 
 /**
  * Initialize the plugin
  */
-function yallo_chatbot_init() {
-    return YALLO_Talent_Chatbot::get_instance();
+function devxpert_chatbot_init() {
+    return DEVXPERT_Talent_Chatbot::get_instance();
 }
 
 // Start the plugin
-yallo_chatbot_init();
+devxpert_chatbot_init();

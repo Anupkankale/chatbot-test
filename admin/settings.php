@@ -1,32 +1,92 @@
-<div class="wrap">
-    <h1><?php echo esc_html(get_admin_page_title()); ?> - Settings</h1>
+<div class="wrap devxpert-admin">
+    <div class="devxpert-admin-header">
+        <div>
+            <p class="devxpert-admin-eyebrow">Configuration</p>
+            <h1 class="devxpert-admin-title"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p class="devxpert-admin-subtitle">Manage chatbot visibility, newsletter capture, notifications, and SMTP delivery from one place.</p>
+        </div>
+        <div class="devxpert-admin-actions">
+            <span class="devxpert-admin-chip">Frontend chatbot</span>
+            <span class="devxpert-admin-chip">Newsletter popup</span>
+            <span class="devxpert-admin-chip">SMTP delivery</span>
+        </div>
+    </div>
 
     <?php settings_errors(); ?>
 
     <form method="post" action="options.php">
         <?php
-        settings_fields('yallo_chatbot_settings');
-        do_settings_sections('yallo_chatbot_settings');
+        settings_fields('devxpert_chatbot_settings');
+        do_settings_sections('devxpert_chatbot_settings');
+        $brand_name   = get_option('devxpert_brand_name', 'DevXpert');
+        $chat_title   = get_option('devxpert_chatbot_title', $brand_name . ' Talent Assistant');
+        $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
+        $brand_color  = get_option('devxpert_brand_accent_color', '#BFA25E');
         ?>
 
-        <table class="form-table" role="presentation">
+        <div class="devxpert-admin-panel">
+            <div class="devxpert-admin-panel-heading">
+                <div>
+                    <span class="devxpert-admin-kicker">Branding</span>
+                    <h2 class="devxpert-admin-panel-title">Brand Controls</h2>
+                    <p class="devxpert-admin-panel-copy">Manage the brand name, chatbot header text, and accent color used across the frontend widget, popup, emails, and admin screens.</p>
+                </div>
+            </div>
+            <table class="form-table" role="presentation">
+            <tbody>
+                <tr>
+                    <th scope="row"><label for="devxpert_brand_name">Brand Name</label></th>
+                    <td>
+                        <input type="text" name="devxpert_brand_name" id="devxpert_brand_name" value="<?php echo esc_attr($brand_name); ?>" class="regular-text" />
+                        <p class="description">Used in emails, labels, and chatbot defaults.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="devxpert_chatbot_title">Chatbot Title</label></th>
+                    <td>
+                        <input type="text" name="devxpert_chatbot_title" id="devxpert_chatbot_title" value="<?php echo esc_attr($chat_title); ?>" class="regular-text" />
+                        <p class="description">Shown in the chatbot header and email header.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="devxpert_chatbot_subtitle">Chatbot Subtitle</label></th>
+                    <td>
+                        <input type="text" name="devxpert_chatbot_subtitle" id="devxpert_chatbot_subtitle" value="<?php echo esc_attr($chat_subtitle); ?>" class="large-text" />
+                        <p class="description">Small supporting line shown under the chatbot title.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="devxpert_brand_accent_color">Brand Accent Color</label></th>
+                    <td>
+                        <div class="devxpert-admin-inline">
+                            <input type="color" name="devxpert_brand_accent_color" id="devxpert_brand_accent_color" value="<?php echo esc_attr($brand_color); ?>" />
+                            <input type="text" id="devxpert_brand_accent_color_text" value="<?php echo esc_attr($brand_color); ?>" class="regular-text" />
+                            <span class="devxpert-admin-chip">Live brand color</span>
+                        </div>
+                        <p class="description">Used for buttons, highlights, cards, and email header styling.</p>
+                    </td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+
+        <div class="devxpert-admin-panel">
+            <div class="devxpert-admin-panel-heading">
+                <div>
+                    <span class="devxpert-admin-kicker">Chatbot</span>
+                    <h2 class="devxpert-admin-panel-title">Chatbot Settings</h2>
+                    <p class="devxpert-admin-panel-copy">Control where the assistant appears, how it opens, and who receives captured leads.</p>
+                </div>
+            </div>
+            <table class="form-table" role="presentation">
             <tbody>
 
-                <!-- ══════════════════════════════════════════ -->
-                <!--  CHATBOT SETTINGS                         -->
-                <!-- ══════════════════════════════════════════ -->
                 <tr>
-                    <th colspan="2" style="background:#f9f9f9;padding:14px 10px;border-left:4px solid #BFA25E;">
-                        <h3 style="margin:0;color:#1a1a1a;font-size:15px;">💬 Chatbot Settings</h3>
-                    </th>
-                </tr>
-
-                <tr>
-                    <th scope="row"><label for="yallo_chatbot_enabled">Enable Chatbot</label></th>
+                    <th scope="row"><label for="devxpert_chatbot_enabled">Enable Chatbot</label></th>
                     <td>
                         <label>
-                            <input type="checkbox" name="yallo_chatbot_enabled" id="yallo_chatbot_enabled" value="1"
-                                <?php checked(get_option('yallo_chatbot_enabled', true), true); ?> />
+                            <input type="checkbox" name="devxpert_chatbot_enabled" id="devxpert_chatbot_enabled" value="1"
+                                <?php checked(get_option('devxpert_chatbot_enabled', true), true); ?> />
                             Enable the chatbot on your website
                         </label>
                         <p class="description">Uncheck to temporarily disable the chatbot without uninstalling the plugin.</p>
@@ -34,41 +94,41 @@
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_chatbot_auto_open">Auto Open</label></th>
+                    <th scope="row"><label for="devxpert_chatbot_auto_open">Auto Open</label></th>
                     <td>
                         <label>
-                            <input type="checkbox" name="yallo_chatbot_auto_open" id="yallo_chatbot_auto_open" value="1"
-                                <?php checked(get_option('yallo_chatbot_auto_open', true), true); ?> />
+                            <input type="checkbox" name="devxpert_chatbot_auto_open" id="devxpert_chatbot_auto_open" value="1"
+                                <?php checked(get_option('devxpert_chatbot_auto_open', true), true); ?> />
                             Automatically open chatbot when user scrolls
                         </label>
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_chatbot_scroll_trigger">Scroll Trigger (%)</label></th>
+                    <th scope="row"><label for="devxpert_chatbot_scroll_trigger">Scroll Trigger (%)</label></th>
                     <td>
-                        <input type="number" name="yallo_chatbot_scroll_trigger" id="yallo_chatbot_scroll_trigger"
-                            value="<?php echo esc_attr(get_option('yallo_chatbot_scroll_trigger', 50)); ?>"
+                        <input type="number" name="devxpert_chatbot_scroll_trigger" id="devxpert_chatbot_scroll_trigger"
+                            value="<?php echo esc_attr(get_option('devxpert_chatbot_scroll_trigger', 50)); ?>"
                             min="0" max="100" step="5" class="regular-text" />
                         <p class="description">Percentage of page scroll to trigger auto-open. Default: 50%</p>
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_chatbot_notification_email">Notification Email</label></th>
+                    <th scope="row"><label for="devxpert_chatbot_notification_email">Notification Email</label></th>
                     <td>
-                        <input type="email" name="yallo_chatbot_notification_email" id="yallo_chatbot_notification_email"
-                            value="<?php echo esc_attr(get_option('yallo_chatbot_notification_email', get_option('admin_email'))); ?>"
+                        <input type="email" name="devxpert_chatbot_notification_email" id="devxpert_chatbot_notification_email"
+                            value="<?php echo esc_attr(get_option('devxpert_chatbot_notification_email', get_option('admin_email'))); ?>"
                             class="regular-text" />
                         <p class="description">Receives all lead &amp; newsletter alerts. Separate multiple with commas.</p>
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_chatbot_display_mode">Display On</label></th>
+                    <th scope="row"><label for="devxpert_chatbot_display_mode">Display On</label></th>
                     <td>
-                        <?php $display_mode = get_option('yallo_chatbot_display_mode', 'all_pages'); ?>
-                        <select name="yallo_chatbot_display_mode" id="yallo_chatbot_display_mode" class="regular-text">
+                        <?php $display_mode = get_option('devxpert_chatbot_display_mode', 'all_pages'); ?>
+                        <select name="devxpert_chatbot_display_mode" id="devxpert_chatbot_display_mode" class="regular-text">
                             <option value="all_pages"      <?php selected($display_mode, 'all_pages'); ?>>All Pages</option>
                             <option value="homepage_only"  <?php selected($display_mode, 'homepage_only'); ?>>Homepage Only</option>
                             <option value="specific_pages" <?php selected($display_mode, 'specific_pages'); ?>>Specific Pages</option>
@@ -76,30 +136,35 @@
                     </td>
                 </tr>
 
-                <tr id="yallo_specific_pages_row" style="<?php echo ($display_mode !== 'specific_pages') ? 'display:none;' : ''; ?>">
-                    <th scope="row"><label for="yallo_chatbot_specific_pages">Specific Pages</label></th>
+                <tr id="devxpert_specific_pages_row" style="<?php echo ($display_mode !== 'specific_pages') ? 'display:none;' : ''; ?>">
+                    <th scope="row"><label for="devxpert_chatbot_specific_pages">Specific Pages</label></th>
                     <td>
-                        <textarea name="yallo_chatbot_specific_pages" id="yallo_chatbot_specific_pages"
-                            rows="6" class="large-text code"><?php echo esc_textarea(get_option('yallo_chatbot_specific_pages', '')); ?></textarea>
+                        <textarea name="devxpert_chatbot_specific_pages" id="devxpert_chatbot_specific_pages"
+                            rows="6" class="large-text code"><?php echo esc_textarea(get_option('devxpert_chatbot_specific_pages', '')); ?></textarea>
                         <p class="description">One page per line. Supports: full URL, partial URL (<code>/services</code>), <code>id:123</code>, <code>slug:about</code></p>
                     </td>
                 </tr>
+            </tbody>
+            </table>
+        </div>
 
-                <!-- ══════════════════════════════════════════ -->
-                <!--  NEWSLETTER SETTINGS                       -->
-                <!-- ══════════════════════════════════════════ -->
-                <tr>
-                    <th colspan="2" style="background:#f9f9f9;padding:14px 10px;border-left:4px solid #BFA25E;">
-                        <h3 style="margin:0;color:#1a1a1a;font-size:15px;">📧 Newsletter Popup Settings</h3>
-                    </th>
-                </tr>
+        <div class="devxpert-admin-panel">
+            <div class="devxpert-admin-panel-heading">
+                <div>
+                    <span class="devxpert-admin-kicker">Newsletter</span>
+                    <h2 class="devxpert-admin-panel-title">Newsletter Popup Settings</h2>
+                    <p class="devxpert-admin-panel-copy">Configure when the popup appears and how the signup offer is presented to visitors.</p>
+                </div>
+            </div>
+            <table class="form-table" role="presentation">
+            <tbody>
 
                 <tr>
-                    <th scope="row"><label for="yallo_newsletter_enabled">Enable Newsletter Popup</label></th>
+                    <th scope="row"><label for="devxpert_newsletter_enabled">Enable Newsletter Popup</label></th>
                     <td>
                         <label>
-                            <input type="checkbox" name="yallo_newsletter_enabled" id="yallo_newsletter_enabled" value="1"
-                                <?php checked(get_option('yallo_newsletter_enabled', false), true); ?> />
+                            <input type="checkbox" name="devxpert_newsletter_enabled" id="devxpert_newsletter_enabled" value="1"
+                                <?php checked(get_option('devxpert_newsletter_enabled', false), true); ?> />
                             Show newsletter subscription popup to visitors
                         </label>
                         <p class="description">Works independently — shows even if the chatbot is disabled.</p>
@@ -107,68 +172,73 @@
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_newsletter_delay">Popup Delay (ms)</label></th>
+                    <th scope="row"><label for="devxpert_newsletter_delay">Popup Delay (ms)</label></th>
                     <td>
-                        <input type="number" name="yallo_newsletter_delay" id="yallo_newsletter_delay"
-                            value="<?php echo esc_attr(get_option('yallo_newsletter_delay', 5000)); ?>"
+                        <input type="number" name="devxpert_newsletter_delay" id="devxpert_newsletter_delay"
+                            value="<?php echo esc_attr(get_option('devxpert_newsletter_delay', 5000)); ?>"
                             min="0" max="60000" step="1000" class="regular-text" />
                         <p class="description">Default: 5000ms (5 seconds)</p>
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_newsletter_title">Popup Title</label></th>
+                    <th scope="row"><label for="devxpert_newsletter_title">Popup Title</label></th>
                     <td>
-                        <input type="text" name="yallo_newsletter_title" id="yallo_newsletter_title"
-                            value="<?php echo esc_attr(get_option('yallo_newsletter_title', 'Stay Updated with YALLO')); ?>"
+                        <input type="text" name="devxpert_newsletter_title" id="devxpert_newsletter_title"
+                            value="<?php echo esc_attr(get_option('devxpert_newsletter_title', 'Stay Updated with ' . $brand_name)); ?>"
                             class="regular-text" />
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_newsletter_description">Popup Description</label></th>
+                    <th scope="row"><label for="devxpert_newsletter_description">Popup Description</label></th>
                     <td>
-                        <textarea name="yallo_newsletter_description" id="yallo_newsletter_description"
-                            rows="3" class="large-text"><?php echo esc_textarea(get_option('yallo_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.')); ?></textarea>
+                        <textarea name="devxpert_newsletter_description" id="devxpert_newsletter_description"
+                            rows="3" class="large-text"><?php echo esc_textarea(get_option('devxpert_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.')); ?></textarea>
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_newsletter_button_text">Button Text</label></th>
+                    <th scope="row"><label for="devxpert_newsletter_button_text">Button Text</label></th>
                     <td>
-                        <input type="text" name="yallo_newsletter_button_text" id="yallo_newsletter_button_text"
-                            value="<?php echo esc_attr(get_option('yallo_newsletter_button_text', 'Subscribe Now')); ?>"
+                        <input type="text" name="devxpert_newsletter_button_text" id="devxpert_newsletter_button_text"
+                            value="<?php echo esc_attr(get_option('devxpert_newsletter_button_text', 'Subscribe Now')); ?>"
                             class="regular-text" />
                     </td>
                 </tr>
 
                 <tr>
-                    <th scope="row"><label for="yallo_newsletter_show_once">Show Once Per Visitor</label></th>
+                    <th scope="row"><label for="devxpert_newsletter_show_once">Show Once Per Visitor</label></th>
                     <td>
                         <label>
-                            <input type="checkbox" name="yallo_newsletter_show_once" id="yallo_newsletter_show_once" value="1"
-                                <?php checked(get_option('yallo_newsletter_show_once', true), true); ?> />
+                            <input type="checkbox" name="devxpert_newsletter_show_once" id="devxpert_newsletter_show_once" value="1"
+                                <?php checked(get_option('devxpert_newsletter_show_once', true), true); ?> />
                             Only show popup once every 30 days per visitor
                         </label>
                     </td>
                 </tr>
+            </tbody>
+            </table>
+        </div>
 
-                <!-- ══════════════════════════════════════════ -->
-                <!--  SMTP SETTINGS                             -->
-                <!-- ══════════════════════════════════════════ -->
-                <tr>
-                    <th colspan="2" style="background:#f9f9f9;padding:14px 10px;border-left:4px solid #BFA25E;">
-                        <h3 style="margin:0;color:#1a1a1a;font-size:15px;">✉️ SMTP Email Settings</h3>
-                    </th>
-                </tr>
+        <div class="devxpert-admin-panel">
+            <div class="devxpert-admin-panel-heading">
+                <div>
+                    <span class="devxpert-admin-kicker">Email Delivery</span>
+                    <h2 class="devxpert-admin-panel-title">SMTP Email Settings</h2>
+                    <p class="devxpert-admin-panel-copy">Use a dedicated sender setup for lead alerts and newsletter notifications, then verify it with a test email.</p>
+                </div>
+            </div>
+            <table class="form-table" role="presentation">
+            <tbody>
 
                 <!-- Enable SMTP -->
                 <tr>
-                    <th scope="row"><label for="yallo_smtp_enabled">Enable SMTP</label></th>
+                    <th scope="row"><label for="devxpert_smtp_enabled">Enable SMTP</label></th>
                     <td>
                         <label>
-                            <input type="checkbox" name="yallo_smtp_enabled" id="yallo_smtp_enabled" value="1"
-                                <?php checked(get_option('yallo_smtp_enabled', false), true); ?> />
+                            <input type="checkbox" name="devxpert_smtp_enabled" id="devxpert_smtp_enabled" value="1"
+                                <?php checked(get_option('devxpert_smtp_enabled', false), true); ?> />
                             Use custom SMTP server to send emails
                         </label>
                         <p class="description">
@@ -179,11 +249,11 @@
                 </tr>
 
                 <!-- SMTP Host -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_host">SMTP Host</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_host">SMTP Host</label></th>
                     <td>
-                        <input type="text" name="yallo_smtp_host" id="yallo_smtp_host"
-                            value="<?php echo esc_attr(get_option('yallo_smtp_host', '')); ?>"
+                        <input type="text" name="devxpert_smtp_host" id="devxpert_smtp_host"
+                            value="<?php echo esc_attr(get_option('devxpert_smtp_host', '')); ?>"
                             class="regular-text" placeholder="smtp.gmail.com" />
                         <p class="description">
                             <strong>Common providers:</strong><br>
@@ -197,11 +267,11 @@
                 </tr>
 
                 <!-- SMTP Port -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_port">SMTP Port</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_port">SMTP Port</label></th>
                     <td>
-                        <input type="number" name="yallo_smtp_port" id="yallo_smtp_port"
-                            value="<?php echo esc_attr(get_option('yallo_smtp_port', 587)); ?>"
+                        <input type="number" name="devxpert_smtp_port" id="devxpert_smtp_port"
+                            value="<?php echo esc_attr(get_option('devxpert_smtp_port', 587)); ?>"
                             class="small-text" min="1" max="65535" />
                         <p class="description">
                             <code>587</code> — TLS (recommended) &nbsp;|&nbsp;
@@ -212,11 +282,11 @@
                 </tr>
 
                 <!-- Encryption -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_encryption">Encryption</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_encryption">Encryption</label></th>
                     <td>
-                        <?php $enc = get_option('yallo_smtp_encryption', 'tls'); ?>
-                        <select name="yallo_smtp_encryption" id="yallo_smtp_encryption">
+                        <?php $enc = get_option('devxpert_smtp_encryption', 'tls'); ?>
+                        <select name="devxpert_smtp_encryption" id="devxpert_smtp_encryption">
                             <option value="tls" <?php selected($enc, 'tls'); ?>>TLS — Port 587 (Recommended)</option>
                             <option value="ssl" <?php selected($enc, 'ssl'); ?>>SSL — Port 465</option>
                             <option value=""    <?php selected($enc, '');    ?>>None — Port 25 (Not Recommended)</option>
@@ -225,26 +295,25 @@
                 </tr>
 
                 <!-- SMTP Username -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_username">SMTP Username</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_username">SMTP Username</label></th>
                     <td>
-                        <input type="text" name="yallo_smtp_username" id="yallo_smtp_username"
-                            value="<?php echo esc_attr(get_option('yallo_smtp_username', '')); ?>"
+                        <input type="text" name="devxpert_smtp_username" id="devxpert_smtp_username"
+                            value="<?php echo esc_attr(get_option('devxpert_smtp_username', '')); ?>"
                             class="regular-text" placeholder="your@email.com" autocomplete="off" />
                         <p class="description">Usually your full email address.</p>
                     </td>
                 </tr>
 
                 <!-- SMTP Password -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_password">SMTP Password</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_password">SMTP Password</label></th>
                     <td>
-                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                            <input type="password" name="yallo_smtp_password" id="yallo_smtp_password"
-                                value="<?php echo esc_attr(get_option('yallo_smtp_password', '')); ?>"
+                        <div class="devxpert-admin-inline">
+                            <input type="password" name="devxpert_smtp_password" id="devxpert_smtp_password"
+                                value="<?php echo esc_attr(get_option('devxpert_smtp_password', '')); ?>"
                                 class="regular-text" autocomplete="new-password" />
-                            <button type="button" id="yallo-toggle-password"
-                                style="padding:5px 12px;cursor:pointer;border:1px solid #ccc;border-radius:4px;background:#fff;">
+                            <button type="button" id="devxpert-toggle-password" class="button button-secondary">
                                 👁 Show
                             </button>
                         </div>
@@ -256,56 +325,55 @@
                 </tr>
 
                 <!-- From Email -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_from_email">From Email</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_from_email">From Email</label></th>
                     <td>
-                        <input type="email" name="yallo_smtp_from_email" id="yallo_smtp_from_email"
-                            value="<?php echo esc_attr(get_option('yallo_smtp_from_email', get_option('admin_email'))); ?>"
+                        <input type="email" name="devxpert_smtp_from_email" id="devxpert_smtp_from_email"
+                            value="<?php echo esc_attr(get_option('devxpert_smtp_from_email', get_option('admin_email'))); ?>"
                             class="regular-text" placeholder="noreply@yoursite.com" />
                         <p class="description">The address emails will appear to come from.</p>
                     </td>
                 </tr>
 
                 <!-- From Name -->
-                <tr class="yallo-smtp-field">
-                    <th scope="row"><label for="yallo_smtp_from_name">From Name</label></th>
+                <tr class="devxpert-smtp-field">
+                    <th scope="row"><label for="devxpert_smtp_from_name">From Name</label></th>
                     <td>
-                        <input type="text" name="yallo_smtp_from_name" id="yallo_smtp_from_name"
-                            value="<?php echo esc_attr(get_option('yallo_smtp_from_name', get_bloginfo('name'))); ?>"
-                            class="regular-text" placeholder="YALLO" />
+                        <input type="text" name="devxpert_smtp_from_name" id="devxpert_smtp_from_name"
+                            value="<?php echo esc_attr(get_option('devxpert_smtp_from_name', get_bloginfo('name'))); ?>"
+                            class="regular-text" placeholder="<?php echo esc_attr($brand_name); ?>" />
                         <p class="description">The sender name shown in the inbox.</p>
                     </td>
                 </tr>
 
                 <!-- Test Email -->
-                <tr class="yallo-smtp-field">
+                <tr class="devxpert-smtp-field">
                     <th scope="row">Send Test Email</th>
                     <td>
-                        <button type="button" id="yallo-smtp-test"
-                            style="padding:8px 18px;background:#BFA25E;border:none;border-radius:5px;color:#000;font-weight:700;font-size:14px;cursor:pointer;">
+                        <button type="button" id="devxpert-smtp-test" class="button devxpert-button-primary">
                             📨 Send Test Email
                         </button>
-                        <span id="yallo-smtp-test-result" style="margin-left:15px;font-weight:600;font-size:14px;"></span>
+                        <span id="devxpert-smtp-test-result" style="margin-left:15px;font-weight:600;font-size:14px;"></span>
                         <p class="description">
-                            Sends a test email to <strong><?php echo esc_html(get_option('yallo_chatbot_notification_email', get_option('admin_email'))); ?></strong>.<br>
+                            Sends a test email to <strong><?php echo esc_html(get_option('devxpert_chatbot_notification_email', get_option('admin_email'))); ?></strong>.<br>
                             <em>Save your settings first before testing.</em>
                         </p>
                     </td>
                 </tr>
 
             </tbody>
-        </table>
+            </table>
+        </div>
 
         <?php submit_button('💾 Save Settings'); ?>
     </form>
 </div>
 
 <style>
-.wrap h1 { color: #1a1a1a; }
-.form-table th { padding: 18px 10px 18px 0; vertical-align: top; }
-.form-table td { padding: 14px 10px; }
-.yallo-smtp-field { transition: opacity .2s ease; }
-.yallo-smtp-field.smtp-hidden { opacity: .35; pointer-events: none; }
+.devxpert-admin .form-table th { padding: 18px 10px 18px 0; vertical-align: top; }
+.devxpert-admin .form-table td { padding: 14px 10px; }
+.devxpert-smtp-field { transition: opacity .2s ease; }
+.devxpert-smtp-field.smtp-hidden { opacity: .35; pointer-events: none; }
 code { background: #f1f1f1; padding: 2px 5px; border-radius: 3px; font-size: 12px; }
 </style>
 
@@ -313,36 +381,47 @@ code { background: #f1f1f1; padding: 2px 5px; border-radius: 3px; font-size: 12p
 jQuery(document).ready(function ($) {
 
     /* ── Show/hide specific pages textarea ───────────── */
-    $('#yallo_chatbot_display_mode').on('change', function () {
-        $('#yallo_specific_pages_row').toggle($(this).val() === 'specific_pages');
+    $('#devxpert_chatbot_display_mode').on('change', function () {
+        $('#devxpert_specific_pages_row').toggle($(this).val() === 'specific_pages');
     });
 
     /* ── Grey out SMTP fields when disabled ──────────── */
     function toggleSmtpFields() {
-        var on = $('#yallo_smtp_enabled').is(':checked');
-        $('.yallo-smtp-field').toggleClass('smtp-hidden', !on);
+        var on = $('#devxpert_smtp_enabled').is(':checked');
+        $('.devxpert-smtp-field').toggleClass('smtp-hidden', !on);
     }
     toggleSmtpFields();
-    $('#yallo_smtp_enabled').on('change', toggleSmtpFields);
+    $('#devxpert_smtp_enabled').on('change', toggleSmtpFields);
 
     /* ── Show / hide password ────────────────────────── */
-    $('#yallo-toggle-password').on('click', function () {
-        var $f = $('#yallo_smtp_password');
+    $('#devxpert-toggle-password').on('click', function () {
+        var $f = $('#devxpert_smtp_password');
         var hide = $f.attr('type') === 'text';
         $f.attr('type', hide ? 'password' : 'text');
         $(this).text(hide ? '👁 Show' : '🙈 Hide');
     });
 
+    $('#devxpert_brand_accent_color').on('input change', function () {
+        $('#devxpert_brand_accent_color_text').val($(this).val());
+    });
+
+    $('#devxpert_brand_accent_color_text').on('input change', function () {
+        var value = $(this).val();
+        if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+            $('#devxpert_brand_accent_color').val(value);
+        }
+    });
+
     /* ── Send test email ─────────────────────────────── */
-    $('#yallo-smtp-test').on('click', function () {
+    $('#devxpert-smtp-test').on('click', function () {
         var $btn = $(this);
-        var $msg = $('#yallo-smtp-test-result');
+        var $msg = $('#devxpert-smtp-test-result');
         $btn.prop('disabled', true).text('⏳ Sending…');
         $msg.text('').css('color', '');
 
         $.post(ajaxurl, {
-            action: 'yallo_smtp_test',
-            nonce:  '<?php echo wp_create_nonce("yallo_chatbot_nonce"); ?>'
+            action: 'devxpert_smtp_test',
+            nonce:  '<?php echo wp_create_nonce("devxpert_chatbot_nonce"); ?>'
         })
         .done(function (r) {
             if (r.success) {

@@ -1,9 +1,18 @@
-<div class="wrap">
-    <h1><?php echo esc_html(get_admin_page_title()); ?> - Leads</h1>
+<div class="wrap devxpert-admin">
+    <div class="devxpert-admin-header">
+        <div>
+            <p class="devxpert-admin-eyebrow">Sales Pipeline</p>
+            <h1 class="devxpert-admin-title"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p class="devxpert-admin-subtitle">Review captured leads, update outreach status, inspect conversation details, and export records for follow-up.</p>
+        </div>
+        <div class="devxpert-admin-actions">
+            <a href="<?php echo esc_url(admin_url('admin-post.php?action=devxpert_export_leads&_wpnonce=' . wp_create_nonce('devxpert_export_leads'))); ?>" class="button button-primary">Export CSV</a>
+        </div>
+    </div>
     
     <?php
     global $wpdb;
-    $table_name = $wpdb->prefix . 'yallo_chatbot_leads';
+    $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
     
     // Handle delete action
     if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['lead_id'])) {
@@ -14,7 +23,7 @@
     
     // Handle bulk delete
     if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && !empty($_POST['lead_ids'])) {
-        check_admin_referer('yallo_bulk_action');
+        check_admin_referer('devxpert_bulk_action');
         $lead_ids = array_map('intval', $_POST['lead_ids']);
         foreach ($lead_ids as $lead_id) {
             $wpdb->delete($table_name, array('id' => $lead_id), array('%d'));
@@ -37,26 +46,29 @@
     ));
     ?>
     
-    <div class="yallo-leads-stats" style="display: flex; gap: 20px; margin: 20px 0;">
-        <div class="yallo-stat-card" style="background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 20px; flex: 1;">
-            <h3 style="margin: 0 0 10px 0; color: #BFA25E;">Total Leads</h3>
-            <p style="font-size: 32px; font-weight: bold; margin: 0;"><?php echo number_format($total_leads); ?></p>
+    <div class="devxpert-stat-grid">
+        <div class="devxpert-stat-card">
+            <p class="devxpert-stat-label">Total Leads</p>
+            <p class="devxpert-stat-value"><?php echo number_format($total_leads); ?></p>
+            <p class="devxpert-stat-note">All submissions stored in the chatbot leads table.</p>
         </div>
         
         <?php
         $today_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE DATE(created_at) = CURDATE()");
         ?>
-        <div class="yallo-stat-card" style="background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 20px; flex: 1;">
-            <h3 style="margin: 0 0 10px 0; color: #BFA25E;">Today's Leads</h3>
-            <p style="font-size: 32px; font-weight: bold; margin: 0;"><?php echo number_format($today_leads); ?></p>
+        <div class="devxpert-stat-card">
+            <p class="devxpert-stat-label">Today</p>
+            <p class="devxpert-stat-value"><?php echo number_format($today_leads); ?></p>
+            <p class="devxpert-stat-note">New leads added on the current server date.</p>
         </div>
         
         <?php
         $week_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
         ?>
-        <div class="yallo-stat-card" style="background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 20px; flex: 1;">
-            <h3 style="margin: 0 0 10px 0; color: #BFA25E;">This Week</h3>
-            <p style="font-size: 32px; font-weight: bold; margin: 0;"><?php echo number_format($week_leads); ?></p>
+        <div class="devxpert-stat-card">
+            <p class="devxpert-stat-label">This Week</p>
+            <p class="devxpert-stat-value"><?php echo number_format($week_leads); ?></p>
+            <p class="devxpert-stat-note">Useful for tracking current demand and outreach volume.</p>
         </div>
     </div>
     
@@ -66,16 +78,10 @@
         </div>
     <?php else: ?>
         
+        <div class="devxpert-admin-panel">
         <form method="post" action="">
-            <?php wp_nonce_field('yallo_bulk_action'); ?>
+            <?php wp_nonce_field('devxpert_bulk_action'); ?>
             <input type="hidden" name="action" value="bulk_delete">
-            
-            <!-- Export CSV -->
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom: 10px;">
-                <?php wp_nonce_field('yallo_export_leads'); ?>
-                <input type="hidden" name="action" value="yallo_export_leads">
-                <button type="submit" class="button button-secondary">Export CSV</button>
-            </form>
 
             <div class="tablenav top">
                 <div class="alignleft actions bulkactions">
@@ -86,21 +92,21 @@
                     <?php if ($total_pages > 1): ?>
                         <span class="pagination-links">
                             <?php if ($page > 1): ?>
-                                <a class="prev-page button" href="?page=yallo-chatbot-leads&paged=<?php echo ($page - 1); ?>">‹</a>
+                                <a class="prev-page button" href="?page=devxpert-chatbot-leads&paged=<?php echo ($page - 1); ?>">‹</a>
                             <?php endif; ?>
                             <span class="paging-input">
                                 <span class="current-page"><?php echo $page; ?></span> of 
                                 <span class="total-pages"><?php echo $total_pages; ?></span>
                             </span>
                             <?php if ($page < $total_pages): ?>
-                                <a class="next-page button" href="?page=yallo-chatbot-leads&paged=<?php echo ($page + 1); ?>">›</a>
+                                <a class="next-page button" href="?page=devxpert-chatbot-leads&paged=<?php echo ($page + 1); ?>">›</a>
                             <?php endif; ?>
                         </span>
                     <?php endif; ?>
                 </div>
             </div>
             
-            <table class="wp-list-table widefat fixed striped">
+            <table class="wp-list-table widefat fixed striped devxpert-admin-table">
                 <thead>
                     <tr>
                         <td class="check-column"><input type="checkbox" id="cb-select-all"></td>
@@ -126,7 +132,7 @@
                             <td><?php echo esc_html($lead->initial_intent); ?></td>
                             <td><?php echo esc_html($lead->service_type); ?></td>
                             <td>
-                                <select class="yallo-lead-status" data-lead-id="<?php echo esc_attr($lead->id); ?>">
+                                <select class="devxpert-lead-status devxpert-admin-pill-select" data-lead-id="<?php echo esc_attr($lead->id); ?>">
                                     <?php
                                     $current_status = isset($lead->status) ? $lead->status : 'new';
                                     $statuses = array('new' => 'New', 'contacted' => 'Contacted', 'converted' => 'Converted', 'lost' => 'Lost');
@@ -142,72 +148,72 @@
                                 </select>
                             </td>
                             <td><?php echo esc_html(date('M j, Y g:i A', strtotime($lead->created_at))); ?></td>
-                            <td>
+                            <td class="devxpert-admin-inline">
                                 <a href="#" class="button button-small view-lead-details" data-lead-id="<?php echo esc_attr($lead->id); ?>">View Details</a>
-                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=yallo-chatbot-leads&action=delete&lead_id=' . $lead->id), 'delete_lead_' . $lead->id); ?>" 
+                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=devxpert-chatbot-leads&action=delete&lead_id=' . $lead->id), 'delete_lead_' . $lead->id); ?>" 
                                    class="button button-small" 
                                    onclick="return confirm('Are you sure you want to delete this lead?');">Delete</a>
                             </td>
                         </tr>
                         
                         <!-- Hidden details row -->
-                        <tr id="lead-details-<?php echo esc_attr($lead->id); ?>" style="display: none;">
-                            <td colspan="9" style="background: #f9f9f9; padding: 20px;">
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <tr id="lead-details-<?php echo esc_attr($lead->id); ?>" class="devxpert-admin-details" style="display: none;">
+                            <td colspan="9" style="padding: 20px;">
+                                <div class="devxpert-admin-details-grid">
                                     <div>
-                                        <strong style="color: #BFA25E;">Full Name:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Full Name</span>
                                         <?php echo esc_html($lead->name); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Email:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Email</span>
                                         <a href="mailto:<?php echo esc_attr($lead->email); ?>"><?php echo esc_html($lead->email); ?></a>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Company:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Company</span>
                                         <?php echo esc_html($lead->company); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Location:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Location</span>
                                         <?php echo esc_html($lead->location); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Industry:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Industry</span>
                                         <?php echo esc_html($lead->industry); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Platforms:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Platforms</span>
                                         <?php echo esc_html($lead->platforms); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Capabilities Gap:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Capabilities Gap</span>
                                         <?php echo esc_html($lead->capabilities); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Service Type:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Service Type</span>
                                         <?php echo esc_html($lead->service_type); ?>
                                     </div>
                                     <div style="grid-column: span 2;">
-                                        <strong style="color: #BFA25E;">Pain Point:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Pain Point</span>
                                         <?php echo nl2br(esc_html($lead->pain)); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Initial Intent:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Initial Intent</span>
                                         <?php echo esc_html($lead->initial_intent); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Lead Type:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Lead Type</span>
                                         <?php echo esc_html($lead->lead_type); ?>
                                     </div>
                                     <div style="grid-column: span 2;">
-                                        <strong style="color: #BFA25E;">Page URL:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Page URL</span>
                                         <a href="<?php echo esc_url($lead->page_url); ?>" target="_blank"><?php echo esc_html($lead->page_url); ?></a>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">IP Address:</strong><br>
+                                        <span class="devxpert-admin-detail-label">IP Address</span>
                                         <?php echo esc_html($lead->ip_address); ?>
                                     </div>
                                     <div>
-                                        <strong style="color: #BFA25E;">Submitted:</strong><br>
+                                        <span class="devxpert-admin-detail-label">Submitted</span>
                                         <?php echo esc_html(date('F j, Y g:i A', strtotime($lead->created_at))); ?>
                                     </div>
                                 </div>
@@ -217,20 +223,21 @@
                 </tbody>
             </table>
         </form>
+        </div>
         
         <div class="tablenav bottom">
             <div class="tablenav-pages">
                 <?php if ($total_pages > 1): ?>
                     <span class="pagination-links">
                         <?php if ($page > 1): ?>
-                            <a class="prev-page button" href="?page=yallo-chatbot-leads&paged=<?php echo ($page - 1); ?>">‹</a>
+                            <a class="prev-page button" href="?page=devxpert-chatbot-leads&paged=<?php echo ($page - 1); ?>">‹</a>
                         <?php endif; ?>
                         <span class="paging-input">
                             <span class="current-page"><?php echo $page; ?></span> of 
                             <span class="total-pages"><?php echo $total_pages; ?></span>
                         </span>
                         <?php if ($page < $total_pages): ?>
-                            <a class="next-page button" href="?page=yallo-chatbot-leads&paged=<?php echo ($page + 1); ?>">›</a>
+                            <a class="next-page button" href="?page=devxpert-chatbot-leads&paged=<?php echo ($page + 1); ?>">›</a>
                         <?php endif; ?>
                     </span>
                 <?php endif; ?>
@@ -261,14 +268,14 @@ jQuery(document).ready(function($) {
     });
 
     // Lead status update via AJAX
-    $(document).on('change', '.yallo-lead-status', function() {
+    $(document).on('change', '.devxpert-lead-status', function() {
         var $select = $(this);
         var leadId  = $select.data('lead-id');
         var status  = $select.val();
 
         $.post(ajaxurl, {
-            action:  'yallo_update_lead_status',
-            nonce:   '<?php echo wp_create_nonce('yallo_chatbot_nonce'); ?>',
+            action:  'devxpert_update_lead_status',
+            nonce:   '<?php echo wp_create_nonce('devxpert_chatbot_nonce'); ?>',
             lead_id: leadId,
             status:  status
         }, function(response) {
@@ -285,24 +292,10 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-.yallo-leads-stats {
-    margin: 20px 0;
-}
-
-.yallo-stat-card h3 {
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.wp-list-table th {
-    font-weight: 600;
-}
-
 .button.view-lead-details {
-    background: #BFA25E;
+    background: var(--dx-accent);
     color: #000;
-    border-color: #BFA25E;
+    border-color: var(--dx-accent);
 }
 
 .button.view-lead-details:hover {
@@ -310,7 +303,7 @@ jQuery(document).ready(function($) {
     border-color: #d4b670;
 }
 
-.yallo-lead-status {
+.devxpert-lead-status {
     font-size: 12px;
     padding: 3px 6px;
     border-radius: 4px;
@@ -318,8 +311,8 @@ jQuery(document).ready(function($) {
     transition: border-color 0.3s;
 }
 
-.yallo-lead-status option[value="new"]       { color: #0073aa; }
-.yallo-lead-status option[value="contacted"] { color: #ff8c00; }
-.yallo-lead-status option[value="converted"] { color: #46b450; }
-.yallo-lead-status option[value="lost"]      { color: #dc3232; }
+.devxpert-lead-status option[value="new"]       { color: #0073aa; }
+.devxpert-lead-status option[value="contacted"] { color: #ff8c00; }
+.devxpert-lead-status option[value="converted"] { color: #46b450; }
+.devxpert-lead-status option[value="lost"]      { color: #dc3232; }
 </style>

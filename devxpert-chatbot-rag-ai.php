@@ -1,6 +1,6 @@
 <?php
 /**
- * YALLO Chatbot - RAG AI Handler
+ * DevXpert Chatbot - RAG AI Handler
  * Retrieval Augmented Generation with Claude API
  *
  * This enables intelligent responses based on your website content
@@ -8,7 +8,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-class YALLO_Chatbot_RAG {
+class DEVXPERT_Chatbot_RAG {
 
     private $wpdb;
     private $table_name;
@@ -17,8 +17,8 @@ class YALLO_Chatbot_RAG {
     public function __construct() {
         global $wpdb;
         $this->wpdb = $wpdb;
-        $this->table_name = $wpdb->prefix . 'yallo_knowledge_base';
-        $this->claude_api_key = get_option('yallo_claude_api_key', '');
+        $this->table_name = $wpdb->prefix . 'devxpert_knowledge_base';
+        $this->claude_api_key = get_option('devxpert_claude_api_key', '');
     }
 
     /**
@@ -26,7 +26,7 @@ class YALLO_Chatbot_RAG {
      */
     public static function create_table() {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'yallo_knowledge_base';
+        $table_name = $wpdb->prefix . 'devxpert_knowledge_base';
         $charset_collate = $wpdb->get_charset_collate();
 
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
@@ -260,7 +260,7 @@ class YALLO_Chatbot_RAG {
         // Build context from chunks
         $context = '';
         if (!empty($relevant_chunks)) {
-            $context = "Based on YALLO's website content:\n\n";
+            $context = "Based on DevXpert's website content:\n\n";
             foreach ($relevant_chunks as $chunk) {
                 $context .= "From " . $chunk->page_title . ":\n";
                 $context .= $chunk->content_chunk . "\n\n";
@@ -268,13 +268,13 @@ class YALLO_Chatbot_RAG {
         }
 
         // Prepare prompt for Claude
-        $system_prompt = "You are YALLO's intelligent chatbot assistant. You help users understand YALLO's services in tech talent, enterprise architecture, and IT consulting.
+        $system_prompt = "You are DevXpert's intelligent chatbot assistant. You help users understand DevXpert's services in tech talent, enterprise architecture, and IT consulting.
 
 IMPORTANT GUIDELINES:
 - Be professional but friendly
 - Keep responses concise (2-3 sentences max, under 50 words)
-- If asked about services YALLO doesn't offer, politely say so
-- Always be helpful and suggest relevant YALLO services when appropriate
+- If asked about services DevXpert doesn't offer, politely say so
+- Always be helpful and suggest relevant DevXpert services when appropriate
 - Use the context provided to give accurate information
 - Never make up information not in the context
 

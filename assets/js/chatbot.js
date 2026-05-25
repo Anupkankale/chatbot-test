@@ -1,12 +1,12 @@
 /**
- * YALLO Talent Chatbot - Main JavaScript
+ * DevXpert Talent Chatbot - Main JavaScript
  * v1.0.2 — Short messages, email-first lead capture
  */
 
 (function($) {
     'use strict';
 
-    const YALLO_CHATBOT = {
+    const DEVXPERT_CHATBOT = {
 
         // ── State ────────────────────────────────────────────
         isOpen: false,
@@ -46,8 +46,8 @@
         // ── Load Questions Dynamically ─────────────────────────
         loadQuestions: function() {
             const self = this;
-            const cached = localStorage.getItem('yallo_questions');
-            const cacheTime = localStorage.getItem('yallo_questions_time');
+            const cached = localStorage.getItem('devxpert_questions');
+            const cacheTime = localStorage.getItem('devxpert_questions_time');
             const now = Date.now();
             
             // Use cache if less than 5 minutes old
@@ -57,26 +57,26 @@
                     self.applyQuestions(data);
                     return Promise.resolve();
                 } catch(e) {
-                    console.error('YALLO: Cache parse error', e);
+                    console.error('DevXpert: Cache parse error', e);
                 }
             }
             
             // Fetch from server
-            return $.post(yalloChatbot.ajaxUrl, {
-                action: 'yallo_get_questions'
+            return $.post(devxpertChatbot.ajaxUrl, {
+                action: 'devxpert_get_questions'
             })
             .done(function(response) {
                 if (response.success && response.data) {
-                    localStorage.setItem('yallo_questions', JSON.stringify(response.data));
-                    localStorage.setItem('yallo_questions_time', now.toString());
+                    localStorage.setItem('devxpert_questions', JSON.stringify(response.data));
+                    localStorage.setItem('devxpert_questions_time', now.toString());
                     self.applyQuestions(response.data);
                 } else {
-                    console.warn('YALLO: Questions load failed, using defaults');
+                    console.warn('DevXpert: Questions load failed, using defaults');
                     self.useDefaultQuestions();
                 }
             })
             .fail(function() {
-                console.warn('YALLO: AJAX failed, using default questions');
+                console.warn('DevXpert: AJAX failed, using default questions');
                 self.useDefaultQuestions();
             });
         },
@@ -85,44 +85,52 @@
             // Fallback to hardcoded defaults
             const defaultData = {
                 welcome: {
-                    text: "Hi, we're YALLO 👋\n\nHow can we help?"
+                    text: "Hi, we're " + (devxpertChatbot.brandName || 'DevXpert') + " 👋\n\nHow can we help?"
                 },
                 services: [
                     {
-                        text: 'Hire tech talent / build a squad',
-                        message: "Great – tech talent & squads.\n\nVetted profiles across AI, Data, Cloud, SAP, Oracle, Salesforce & more – delivered in ~72 hrs.",
+                        text: 'Hire tech talent fast',
+                        message: "Great choice.\n\nWe help teams hire vetted specialists across AI, Data, Cloud, SAP, Oracle, Salesforce and more, often with qualified profiles shared in about 72 hours.",
                         intent: 'Hire tech talent / build a squad',
-                        lead_type: 'details'
+                        lead_type: 'details',
+                        cta_primary: '📋 Get matched candidate options',
+                        cta_secondary: '📞 Discuss my hiring need'
                     },
                     {
-                        text: 'Stabilise a troubled project',
-                        message: "Got it – stabilise a project.\n\nWe use architects & delivery leads to find and fix talent or role clarity gaps fast.",
+                        text: 'Rescue a delayed project',
+                        message: "Understood.\n\nWe can quickly assess delivery issues, identify role or capability gaps, and help you stabilise the project with hands-on leadership support.",
                         intent: 'Stabilise a troubled project',
-                        lead_type: 'call'
+                        lead_type: 'call',
+                        cta_primary: '📞 Book a recovery call',
+                        cta_secondary: '📋 Send my project brief'
                     },
                     {
-                        text: 'Enterprise Architecture / IT strategy',
-                        message: "Understood – EA / IT strategy.\n\nWe provide Chief Architect capacity to align roadmaps and talent – no big consulting lock-in.",
+                        text: 'Get architecture / IT strategy help',
+                        message: "Makes sense.\n\nWe provide architecture and strategy support to align delivery, platforms, and talent without locking you into a large consulting engagement.",
                         intent: 'Enterprise Architecture / IT strategy',
-                        lead_type: 'call'
+                        lead_type: 'call',
+                        cta_primary: '📞 Book a strategy call',
+                        cta_secondary: '📋 Share my roadmap challenge'
                     },
                     {
-                        text: 'Not sure / explore options',
-                        message: "No problem – we'll figure it out together.\n\nTell us a little and we'll recommend the right next step.",
+                        text: 'I need help choosing the right option',
+                        message: "No problem.\n\nShare a little context and we'll recommend the best route, whether that's talent support, project rescue, or strategic guidance.",
                         intent: 'Not sure / explore options',
-                        lead_type: 'details'
+                        lead_type: 'details',
+                        cta_primary: '📋 Recommend the right solution',
+                        cta_secondary: '📞 Talk it through with an expert'
                     }
                 ],
                 consultation: [
-                    {key: 'name', text: "What's your **full name?**"},
-                    {key: 'email', text: "Thanks {name}! Your **work email?**"},
-                    {key: 'company', text: "Your **company** name?"},
-                    {key: 'location', text: "**Where** are you based?\n(e.g. Dubai, UAE)"},
-                    {key: 'industry', text: "**Industry?**\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"},
-                    {key: 'platforms', text: "**Core platform?**\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"},
-                    {key: 'capabilities', text: "**Biggest gap?**\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"},
-                    {key: 'service_type', text: "**What do you need?**\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"},
-                    {key: 'pain', text: "In **one line** – what's the main challenge?"}
+                    {key: 'name', text: "Let's get this moving.\n\nWhat's your **full name?**"},
+                    {key: 'email', text: "Thanks **{name}**. What's your **work email** so we can follow up with the right next step?"},
+                    {key: 'company', text: "Which **company** are you with?"},
+                    {key: 'location', text: "Where is your **team based**?\n(e.g. Dubai, UAE)"},
+                    {key: 'industry', text: "Which **industry** best matches your business?\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"},
+                    {key: 'platforms', text: "Which **core platform or ecosystem** matters most here?\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"},
+                    {key: 'capabilities', text: "Where is the **biggest capability gap** right now?\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"},
+                    {key: 'service_type', text: "What type of **support** are you looking for?\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"},
+                    {key: 'pain', text: "What is the **main business or delivery challenge** you want solved?"}
                 ]
             };
             this.applyQuestions(defaultData);
@@ -130,6 +138,30 @@
         },
         
         applyQuestions: function(data) {
+            const buildPrimaryCta = function(service) {
+                if (service.cta_primary) {
+                    return service.cta_primary;
+                }
+
+                if (service.lead_type === 'call') {
+                    return '📞 Book my strategy call';
+                }
+
+                return '📋 Get matched options';
+            };
+
+            const buildSecondaryCta = function(service) {
+                if (service.cta_secondary) {
+                    return service.cta_secondary;
+                }
+
+                if (service.lead_type === 'call') {
+                    return '✉️ Send my requirements';
+                }
+
+                return '💬 Talk to the team';
+            };
+
             // Build questions array from loaded data
             this.questions = [
                 {
@@ -151,7 +183,8 @@
                     id: 10 + i,
                     answer: service.message,
                     options: [
-                        { text: '📋 Share my details', nextId: 300, leadType: service.lead_type },
+                        { text: buildPrimaryCta(service), nextId: 300, leadType: service.lead_type },
+                        { text: buildSecondaryCta(service), nextId: 300, leadType: service.lead_type },
                         { text: '← Back', nextId: 0 }
                     ]
                 });
@@ -169,7 +202,7 @@
             {
                 id: 0,
                 keywords: ['hi', 'hello', 'start', 'menu'],
-                answer: "Hi, we're **YALLO** 👋\n\nHow can we help?",
+                answer: "Hi, we're **" + (devxpertChatbot.brandName || 'DevXpert') + "** 👋\n\nHow can we help?",
                 options: [
                     { text: '🧑‍💻 Hire tech talent / squad',      nextId: 10, intent: 'Hire tech talent / build a squad' },
                     { text: '🔧 Stabilise a project',             nextId: 11, intent: 'Stabilise a project / programme' },
@@ -275,36 +308,36 @@
 
                 // ── Startup diagnostics ──────────────────────────
                 const checks = {
-                    'Toggle button (#yallo-chat-toggle)':    self.$toggle.length,
-                    'Chat window (#yallo-chatbot-window)':   self.$window.length,
+                    'Toggle button (#devxpert-chat-toggle)':    self.$toggle.length,
+                    'Chat window (#devxpert-chatbot-window)':   self.$window.length,
                     'Messages container':                    self.$messagesContainer.length,
                     'Input field':                           self.$input.length,
                     'Send button':                           self.$sendBtn.length,
-                    'yalloChatbot config':                   typeof yalloChatbot !== 'undefined' ? 1 : 0,
+                    'devxpertChatbot config':                   typeof devxpertChatbot !== 'undefined' ? 1 : 0,
                     'Questions loaded':                      self.questions.length > 0 ? 1 : 0,
                 };
                 let allOk = true;
                 Object.keys(checks).forEach(function(label) {
                     if (!checks[label]) {
-                        console.error('❌ YALLO Chatbot: Missing — ' + label);
+                        console.error('❌ DevXpert Chatbot: Missing — ' + label);
                         allOk = false;
                     }
                 });
                 if (allOk) {
-                    console.log('✅ YALLO Chatbot: Initialised OK. Click the button to open.');
+                    console.log('✅ DevXpert Chatbot: Initialised OK. Click the button to open.');
                 }
             });
         },
 
         cacheDom: function() {
-            this.$window            = $('#yallo-chatbot-window');
-            this.$toggle            = $('#yallo-chat-toggle');
-            this.$messagesContainer = $('#yallo-messages-container');
-            this.$form              = $('#yallo-chat-form');
-            this.$input             = $('#yallo-message-input');
-            this.$sendBtn           = $('#yallo-send-btn');
-            this.$chatIcon          = $('#yallo-chat-icon');
-            this.$closeIcon         = $('#yallo-close-icon');
+            this.$window            = $('#devxpert-chatbot-window');
+            this.$toggle            = $('#devxpert-chat-toggle');
+            this.$messagesContainer = $('#devxpert-messages-container');
+            this.$form              = $('#devxpert-chat-form');
+            this.$input             = $('#devxpert-message-input');
+            this.$sendBtn           = $('#devxpert-send-btn');
+            this.$chatIcon          = $('#devxpert-chat-icon');
+            this.$closeIcon         = $('#devxpert-close-icon');
         },
 
         // ── Events ───────────────────────────────────────────
@@ -312,7 +345,7 @@
             const self = this;
 
             this.$toggle.on('click', function() { self.toggleChat(); });
-            $('#yallo-chat-close').on('click', function() { self.closeChat(); });
+            $('#devxpert-chat-close').on('click', function() { self.closeChat(); });
 
             this.$form.on('submit', function(e) {
                 e.preventDefault();
@@ -345,13 +378,13 @@
 
         // ── Auto open ────────────────────────────────────────
         checkAutoOpen: function() {
-            if (!yalloChatbot.autoOpen) return;
+            if (!devxpertChatbot.autoOpen) return;
             const self = this;
-            $(window).on('scroll.yallo', function() {
+            $(window).on('scroll.devxpert', function() {
                 const scrollPct = ($(window).scrollTop() / ($(document).height() - $(window).height())) * 100;
-                if (scrollPct >= yalloChatbot.scrollTrigger && !self.hasAutoOpened) {
+                if (scrollPct >= devxpertChatbot.scrollTrigger && !self.hasAutoOpened) {
                     self.hasAutoOpened = true;
-                    $(window).off('scroll.yallo');
+                    $(window).off('scroll.devxpert');
                     self.openChat();
                 }
             });
@@ -365,9 +398,12 @@
         openChat: function() {
             const self = this;
             this.isOpen = true;
-            this.$window.addClass('yallo-open');
+            this.$window.addClass('devxpert-open');
+            this.$window.attr('aria-hidden', 'false');
+            this.$toggle.attr('aria-expanded', 'true');
             this.$chatIcon.hide();
             this.$closeIcon.show();
+            this.$input.trigger('focus');
             
             if (this.messages.length === 0) {
                 // Safety check: if questions not loaded yet, wait
@@ -392,9 +428,12 @@
 
         closeChat: function() {
             this.isOpen = false;
-            this.$window.removeClass('yallo-open');
+            this.$window.removeClass('devxpert-open');
+            this.$window.attr('aria-hidden', 'true');
+            this.$toggle.attr('aria-expanded', 'false');
             this.$chatIcon.show();
             this.$closeIcon.hide();
+            this.$toggle.trigger('focus');
         },
 
         // ── Message routing ───────────────────────────────────
@@ -403,7 +442,7 @@
             this.addMessage(userMessage, 'user');
             this.showTypingIndicator();
 
-            if (yalloChatbot.aiEnabled && !this.isConsultationActive) {
+            if (devxpertChatbot.aiEnabled && !this.isConsultationActive) {
                 this.getAIResponse(userMessage);
                 return;
             }
@@ -428,9 +467,9 @@
                 content: m.text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/<br>/g, '\n'),
             }));
 
-            $.post(yalloChatbot.ajaxUrl, {
-                action:  'yallo_ai_chat',
-                nonce:   yalloChatbot.nonce,
+            $.post(devxpertChatbot.ajaxUrl, {
+                action:  'devxpert_ai_chat',
+                nonce:   devxpertChatbot.nonce,
                 message: userMessage,
                 history: JSON.stringify(history),
             })
@@ -569,7 +608,7 @@
                 setTimeout(() => {
                     this.hideTypingIndicator();
                     this.addMessage(
-                        `Thanks for connecting with **YALLO**! 🙏\n\nOur team will get back to you within 24 hours.\n\nWould you like to give more information on your requirement?`,
+                        `Thanks for connecting with **${devxpertChatbot.brandName || 'DevXpert'}**! 🙏\n\nOur team will get back to you within 24 hours.\n\nWould you like to give more information on your requirement?`,
                         'bot',
                         [
                             { text: '📋 Give More Information', action: 'continue' }
@@ -624,9 +663,9 @@
             const self = this;
             this.leadSavedEarly = true;
 
-            $.post(yalloChatbot.ajaxUrl, {
-                action:         'yallo_submit_lead',
-                nonce:          yalloChatbot.nonce,
+            $.post(devxpertChatbot.ajaxUrl, {
+                action:         'devxpert_submit_lead',
+                nonce:          devxpertChatbot.nonce,
                 name:           this.consultationData.name  || '',
                 email:          this.consultationData.email || '',
                 company:        '',
@@ -650,9 +689,9 @@
 
         // ── AJAX: update lead with remaining answers ───────────
         updateLead: function() {
-            $.post(yalloChatbot.ajaxUrl, {
-                action:       'yallo_update_lead',
-                nonce:        yalloChatbot.nonce,
+            $.post(devxpertChatbot.ajaxUrl, {
+                action:       'devxpert_update_lead',
+                nonce:        devxpertChatbot.nonce,
                 email:        this.consultationData.email        || '',
                 company:      this.consultationData.company      || '',
                 location:     this.consultationData.location     || '',
@@ -666,9 +705,9 @@
 
         // ── AJAX: full submit (fallback if early save missed) ──
         submitLead: function() {
-            $.post(yalloChatbot.ajaxUrl, {
-                action:         'yallo_submit_lead',
-                nonce:          yalloChatbot.nonce,
+            $.post(devxpertChatbot.ajaxUrl, {
+                action:         'devxpert_submit_lead',
+                nonce:          devxpertChatbot.nonce,
                 name:           this.consultationData.name           || '',
                 email:          this.consultationData.email          || '',
                 company:        this.consultationData.company        || '',
@@ -689,24 +728,24 @@
             options = options || [];
             this.messages.push({ text, sender, options });
 
-            const $msg    = $('<div>').addClass('yallo-message').addClass(sender);
-            const $bubble = $('<div>').addClass('yallo-message-bubble');
+            const $msg    = $('<div>').addClass('devxpert-message').addClass(sender);
+            const $bubble = $('<div>').addClass('devxpert-message-bubble');
             const html    = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                  .replace(/\n/g, '<br>');
             $bubble.html(html);
             $msg.append($bubble);
 
             if (sender === 'bot' && options.length > 0) {
-                const $opts = $('<div>').addClass('yallo-message-options');
+                const $opts = $('<div>').addClass('devxpert-message-options');
                 options.forEach(opt => {
-                    $('<button>').addClass('yallo-option-btn').text(opt.text)
+                    $('<button>').addClass('devxpert-option-btn').text(opt.text)
                         .on('click', () => this.handleOptionClick(opt))
                         .appendTo($opts);
                 });
                 $msg.append($opts);
             }
 
-            $msg.append($('<span>').addClass('yallo-message-time').text(this.formatTime()));
+            $msg.append($('<span>').addClass('devxpert-message-time').text(this.formatTime()));
 
             this.$messagesContainer.append($msg);
             this.scrollToBottom();
@@ -721,9 +760,9 @@
         // ── Typing indicator ──────────────────────────────────
         showTypingIndicator: function() {
             this.isBotTyping = true;
-            const $t = $('<div>').addClass('yallo-message bot').attr('id', 'yallo-typing');
-            const $i = $('<div>').addClass('yallo-typing-indicator');
-            for (let i = 0; i < 3; i++) $i.append($('<span>').addClass('yallo-typing-dot'));
+            const $t = $('<div>').addClass('devxpert-message bot').attr('id', 'devxpert-typing');
+            const $i = $('<div>').addClass('devxpert-typing-indicator');
+            for (let i = 0; i < 3; i++) $i.append($('<span>').addClass('devxpert-typing-dot'));
             $t.append($i);
             this.$messagesContainer.append($t);
             this.scrollToBottom();
@@ -731,7 +770,7 @@
 
         hideTypingIndicator: function() {
             this.isBotTyping = false;
-            $('#yallo-typing').remove();
+            $('#devxpert-typing').remove();
         },
 
         // ── Input state ───────────────────────────────────────
@@ -761,7 +800,7 @@
         bindMobileKeyboard: function() {
             if (!window.visualViewport) return;
             const self = this;
-            const $wrapper = this.$window.closest('.yallo-chatbot-wrapper');
+            const $wrapper = this.$window.closest('.devxpert-chatbot-wrapper');
 
             window.visualViewport.addEventListener('resize', function() {
                 if (!self.isOpen) return;
@@ -779,7 +818,7 @@
     };
 
     $(document).ready(function() {
-        YALLO_CHATBOT.init();
+        DEVXPERT_CHATBOT.init();
     });
 
 })(jQuery);
