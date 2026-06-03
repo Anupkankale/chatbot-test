@@ -82,7 +82,7 @@ class DEVXPERT_Talent_Chatbot {
         .devxpert-newsletter-overlay {
             --devxpert-accent: {$accent};
             --devxpert-accent-strong: {$accent};
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'SF Pro Text', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }";
     }
 
@@ -126,6 +126,9 @@ class DEVXPERT_Talent_Chatbot {
 
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
+
+        // REST endpoints for external chat channels
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
         
         // Add chatbot to footer
         add_action('wp_footer', array($this, 'render_chatbot'));
@@ -217,13 +220,6 @@ class DEVXPERT_Talent_Chatbot {
         }
 
         $version = DEVXPERT_CHATBOT_VERSION;
-
-        wp_enqueue_style(
-            'devxpert-inter-font',
-            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
-            array(),
-            null
-        );
 
         // ─────────────────────────────────────────────────────────
         // NEWSLETTER: Loads independently — NOT affected by chatbot toggle
@@ -952,6 +948,22 @@ class DEVXPERT_Talent_Chatbot {
         register_setting('devxpert_chatbot_settings', 'devxpert_claude_api_key');
         register_setting('devxpert_chatbot_settings', 'devxpert_ai_enabled');
         register_setting('devxpert_chatbot_settings', 'devxpert_ai_fallback_message');
+
+        // Telegram settings
+        register_setting('devxpert_chatbot_settings', 'devxpert_telegram_enabled');
+        register_setting('devxpert_chatbot_settings', 'devxpert_telegram_bot_token');
+        register_setting('devxpert_chatbot_settings', 'devxpert_telegram_secret_token');
+    }
+
+    /**
+     * Register REST routes used by external chat channels.
+     */
+    public function register_rest_routes() {
+        register_rest_route('devxpert/v1', '/telegram/webhook', array(
+            'methods'             => 'POST',
+            'callback'            => array($this, 'handle_telegram_webhook'),
+            'permission_callback' => '__return_true',
+        ));
     }
 
     /**
@@ -1200,6 +1212,13 @@ class DEVXPERT_Talent_Chatbot {
      * Get chatbot questions via AJAX
      */
     public function get_chatbot_questions() {
+        wp_send_json_success($this->get_chatbot_questions_data());
+    }
+
+    /**
+     * Return chatbot question config as a reusable PHP array.
+     */
+    private function get_chatbot_questions_data() {
         $questions_json = get_option('devxpert_chatbot_questions_json', '');
         $questions      = get_option('devxpert_chatbot_questions', null);
 
@@ -1209,62 +1228,511 @@ class DEVXPERT_Talent_Chatbot {
                 $questions = $decoded_questions;
             }
         }
-        
-        // If no custom questions, return defaults
-        if (!$questions) {
-            $questions = array(
-                'welcome' => array(
-                    'text' => "Hi, we're " . $this->get_brand_name() . " 👋\n\nTell us what you're trying to solve and we'll point you to the fastest next step."
+
+        if ($questions) {
+            return $questions;
+        }
+
+        return array(
+            'welcome' => array(
+                'text' => "Hi, we're " . $this->get_brand_name() . " 👋\n\nTell us what you're trying to solve and we'll point you to the fastest next step."
+            ),
+            'services' => array(
+                array(
+                    'text' => 'Hire tech talent fast',
+                    'message' => "Great choice.\n\nWe help teams hire vetted specialists across AI, Data, Cloud, SAP, Oracle, Salesforce and more, often with qualified profiles shared in about 72 hours.",
+                    'intent' => 'Hire tech talent / build a squad',
+                    'lead_type' => 'details',
+                    'cta_primary' => '📋 Get matched candidate options',
+                    'cta_secondary' => '📞 Discuss my hiring need'
                 ),
-                'services' => array(
-                    array(
-                        'text' => 'Hire tech talent fast',
-                        'message' => "Great choice.\n\nWe help teams hire vetted specialists across AI, Data, Cloud, SAP, Oracle, Salesforce and more, often with qualified profiles shared in about 72 hours.",
-                        'intent' => 'Hire tech talent / build a squad',
-                        'lead_type' => 'details',
-                        'cta_primary' => '📋 Get matched candidate options',
-                        'cta_secondary' => '📞 Discuss my hiring need'
-                    ),
-                    array(
-                        'text' => 'Rescue a delayed project',
-                        'message' => "Understood.\n\nWe can quickly assess delivery issues, identify role or capability gaps, and help you stabilise the project with hands-on leadership support.",
-                        'intent' => 'Stabilise a troubled project',
-                        'lead_type' => 'call',
-                        'cta_primary' => '📞 Book a recovery call',
-                        'cta_secondary' => '📋 Send my project brief'
-                    ),
-                    array(
-                        'text' => 'Get architecture / IT strategy help',
-                        'message' => "Makes sense.\n\nWe provide architecture and strategy support to align delivery, platforms, and talent without locking you into a large consulting engagement.",
-                        'intent' => 'Enterprise Architecture / IT strategy',
-                        'lead_type' => 'call',
-                        'cta_primary' => '📞 Book a strategy call',
-                        'cta_secondary' => '📋 Share my roadmap challenge'
-                    ),
-                    array(
-                        'text' => 'I need help choosing the right option',
-                        'message' => "No problem.\n\nShare a little context and we'll recommend the best route, whether that's talent support, project rescue, or strategic guidance.",
-                        'intent' => 'Not sure / explore options',
-                        'lead_type' => 'details',
-                        'cta_primary' => '📋 Recommend the right solution',
-                        'cta_secondary' => '📞 Talk it through with an expert'
-                    )
+                array(
+                    'text' => 'Rescue a delayed project',
+                    'message' => "Understood.\n\nWe can quickly assess delivery issues, identify role or capability gaps, and help you stabilise the project with hands-on leadership support.",
+                    'intent' => 'Stabilise a troubled project',
+                    'lead_type' => 'call',
+                    'cta_primary' => '📞 Book a recovery call',
+                    'cta_secondary' => '📋 Send my project brief'
                 ),
-                'consultation' => array(
-                    array('key' => 'name', 'text' => "Let's get this moving.\n\nWhat's your **full name?**"),
-                    array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can follow up with the right next step?"),
-                    array('key' => 'company', 'text' => "Which **company** are you with?"),
-                    array('key' => 'location', 'text' => "Where is your **team based**?\n(e.g. Dubai, UAE)"),
-                    array('key' => 'industry', 'text' => "Which **industry** best matches your business?\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"),
-                    array('key' => 'platforms', 'text' => "Which **core platform or ecosystem** matters most here?\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"),
-                    array('key' => 'capabilities', 'text' => "Where is the **biggest capability gap** right now?\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"),
-                    array('key' => 'service_type', 'text' => "What type of **support** are you looking for?\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"),
-                    array('key' => 'pain', 'text' => "What is the **main business or delivery challenge** you want solved?")
+                array(
+                    'text' => 'Get architecture / IT strategy help',
+                    'message' => "Makes sense.\n\nWe provide architecture and strategy support to align delivery, platforms, and talent without locking you into a large consulting engagement.",
+                    'intent' => 'Enterprise Architecture / IT strategy',
+                    'lead_type' => 'call',
+                    'cta_primary' => '📞 Book a strategy call',
+                    'cta_secondary' => '📋 Share my roadmap challenge'
+                ),
+                array(
+                    'text' => 'I need help choosing the right option',
+                    'message' => "No problem.\n\nShare a little context and we'll recommend the best route, whether that's talent support, project rescue, or strategic guidance.",
+                    'intent' => 'Not sure / explore options',
+                    'lead_type' => 'details',
+                    'cta_primary' => '📋 Recommend the right solution',
+                    'cta_secondary' => '📞 Talk it through with an expert'
                 )
+            ),
+            'consultation' => array(
+                array('key' => 'name', 'text' => "Let's get this moving.\n\nWhat's your **full name?**"),
+                array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can follow up with the right next step?"),
+                array('key' => 'company', 'text' => "Which **company** are you with?"),
+                array('key' => 'location', 'text' => "Where is your **team based**?\n(e.g. Dubai, UAE)"),
+                array('key' => 'industry', 'text' => "Which **industry** best matches your business?\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"),
+                array('key' => 'platforms', 'text' => "Which **core platform or ecosystem** matters most here?\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"),
+                array('key' => 'capabilities', 'text' => "Where is the **biggest capability gap** right now?\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"),
+                array('key' => 'service_type', 'text' => "What type of **support** are you looking for?\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"),
+                array('key' => 'pain', 'text' => "What is the **main business or delivery challenge** you want solved?")
+            )
+        );
+    }
+
+    /**
+     * Telegram webhook handler.
+     */
+    public function handle_telegram_webhook($request) {
+        if (!get_option('devxpert_telegram_enabled', false)) {
+            return new WP_REST_Response(array('ok' => false, 'message' => 'Telegram disabled'), 200);
+        }
+
+        $bot_token = trim((string) get_option('devxpert_telegram_bot_token', ''));
+        if ($bot_token === '') {
+            return new WP_REST_Response(array('ok' => false, 'message' => 'Telegram bot token missing'), 200);
+        }
+
+        $expected_secret = trim((string) get_option('devxpert_telegram_secret_token', ''));
+        if ($expected_secret !== '') {
+            $received_secret = (string) $request->get_header('x-telegram-bot-api-secret-token');
+            if (!hash_equals($expected_secret, $received_secret)) {
+                return new WP_REST_Response(array('ok' => false, 'message' => 'Invalid secret token'), 403);
+            }
+        }
+
+        $update = $request->get_json_params();
+        if (!is_array($update) || empty($update['message']['chat']['id'])) {
+            return new WP_REST_Response(array('ok' => true), 200);
+        }
+
+        $message = $update['message'];
+        $chat_id = (string) $message['chat']['id'];
+        $text    = trim((string) ($message['text'] ?? ''));
+
+        if ($text === '') {
+            $this->send_telegram_message($chat_id, "I can currently process text messages only. Send /start to begin.", $this->get_telegram_main_keyboard());
+            return new WP_REST_Response(array('ok' => true), 200);
+        }
+
+        $reply = $this->build_telegram_reply($chat_id, $text, $message);
+        if (!empty($reply['text'])) {
+            $this->send_telegram_message($chat_id, $reply['text'], $reply['keyboard'] ?? null);
+        }
+
+        return new WP_REST_Response(array('ok' => true), 200);
+    }
+
+    /**
+     * Build a Telegram reply while preserving lightweight conversation state.
+     */
+    private function build_telegram_reply($chat_id, $text, $message) {
+        $state           = $this->get_telegram_state($chat_id);
+        $normalized_text = $this->normalize_telegram_input($text);
+        $questions       = $this->get_chatbot_questions_data();
+        $services        = $questions['services'] ?? array();
+
+        if (in_array($normalized_text, array('/start', '/menu', 'menu', 'start'), true)) {
+            $state = $this->reset_telegram_state($chat_id);
+            return array(
+                'text'     => $this->format_telegram_text($questions['welcome']['text'] ?? "Hi, we're " . $this->get_brand_name() . '.'),
+                'keyboard' => $this->get_telegram_main_keyboard(),
             );
         }
-        
-        wp_send_json_success($questions);
+
+        if (($state['mode'] ?? '') === 'consultation') {
+            return $this->handle_telegram_consultation_reply($chat_id, $state, $text, $message);
+        }
+
+        foreach ($services as $service) {
+            if ($this->normalize_telegram_input($service['text'] ?? '') === $normalized_text) {
+                $state['selected_service'] = array(
+                    'intent'    => $service['intent'] ?? '',
+                    'lead_type' => $service['lead_type'] ?? '',
+                );
+                $this->set_telegram_state($chat_id, $state);
+
+                $reply_text = $this->format_telegram_text($service['message'] ?? '');
+                $reply_text .= "\n\nReply with:\n- Share details\n- Book a call\n- Menu";
+
+                return array(
+                    'text'     => $reply_text,
+                    'keyboard' => $this->get_telegram_service_keyboard(),
+                );
+            }
+        }
+
+        if (in_array($normalized_text, array('share details', 'book a call'), true)) {
+            $lead_type = $normalized_text === 'book a call' ? 'call' : 'details';
+            return $this->start_telegram_consultation($chat_id, $state, $lead_type);
+        }
+
+        if (get_option('devxpert_claude_api_key')) {
+            $ai_message = $this->get_telegram_ai_response($text, $state);
+            if ($ai_message !== '') {
+                $state = $this->append_telegram_history($state, 'user', $text);
+                $state = $this->append_telegram_history($state, 'assistant', $ai_message);
+                $this->set_telegram_state($chat_id, $state);
+
+                return array(
+                    'text'     => $ai_message,
+                    'keyboard' => $this->get_telegram_main_keyboard(),
+                );
+            }
+        }
+
+        return array(
+            'text'     => "Please choose one of the options below or send /start to reset the chat.",
+            'keyboard' => $this->get_telegram_main_keyboard(),
+        );
+    }
+
+    /**
+     * Start the Telegram consultation flow.
+     */
+    private function start_telegram_consultation($chat_id, $state, $lead_type) {
+        $questions = $this->get_chatbot_questions_data();
+        $state['mode'] = 'consultation';
+        $state['consultation_step'] = 0;
+        $state['consultation_data'] = array(
+            'initial_intent' => $state['selected_service']['intent'] ?? '',
+            'lead_type'      => $lead_type ?: ($state['selected_service']['lead_type'] ?? ''),
+        );
+        $state['lead_saved_early'] = false;
+        $state['history'] = array();
+        $this->set_telegram_state($chat_id, $state);
+
+        $question = $questions['consultation'][0]['text'] ?? "What's your full name?";
+
+        return array(
+            'text'     => $this->format_telegram_text($question),
+            'keyboard' => $this->get_telegram_cancel_keyboard(),
+        );
+    }
+
+    /**
+     * Handle Telegram consultation answers and lead persistence.
+     */
+    private function handle_telegram_consultation_reply($chat_id, $state, $text, $message) {
+        $normalized = $this->normalize_telegram_input($text);
+        if (in_array($normalized, array('menu', '/start', '/menu', 'cancel'), true)) {
+            $state = $this->reset_telegram_state($chat_id);
+            $questions = $this->get_chatbot_questions_data();
+
+            return array(
+                'text'     => $this->format_telegram_text($questions['welcome']['text'] ?? "Hi, we're " . $this->get_brand_name() . '.'),
+                'keyboard' => $this->get_telegram_main_keyboard(),
+            );
+        }
+
+        $questions = $this->get_chatbot_questions_data();
+        $flow      = $questions['consultation'] ?? array();
+        $step      = (int) ($state['consultation_step'] ?? 0);
+        $current   = $flow[$step] ?? null;
+
+        if (!$current) {
+            $state = $this->reset_telegram_state($chat_id);
+            return array(
+                'text'     => 'The consultation state expired. Send /start to begin again.',
+                'keyboard' => $this->get_telegram_main_keyboard(),
+            );
+        }
+
+        if (($current['key'] ?? '') === 'email' && !is_email($text)) {
+            return array(
+                'text'     => 'That email does not look valid. Please send a work email address.',
+                'keyboard' => $this->get_telegram_cancel_keyboard(),
+            );
+        }
+
+        $state['consultation_data'][$current['key']] = sanitize_text_field($text);
+        $state['consultation_step'] = $step + 1;
+
+        if ((int) $state['consultation_step'] === 2 && empty($state['lead_saved_early'])) {
+            $this->save_telegram_lead($state['consultation_data'], $message);
+            $state['lead_saved_early'] = true;
+        }
+
+        if ((int) $state['consultation_step'] >= count($flow)) {
+            if (!empty($state['lead_saved_early'])) {
+                $this->update_telegram_lead($state['consultation_data']);
+            } else {
+                $this->save_telegram_lead($state['consultation_data'], $message);
+            }
+
+            $email = $state['consultation_data']['email'] ?? '';
+            $name  = $state['consultation_data']['name'] ?? 'there';
+            $this->reset_telegram_state($chat_id);
+
+            return array(
+                'text'     => "Thanks, {$name}. We'll be in touch at {$email} within 24 hours.",
+                'keyboard' => $this->get_telegram_main_keyboard(),
+            );
+        }
+
+        $next_question = $flow[$state['consultation_step']]['text'] ?? '';
+        $next_question = str_replace('{name}', $state['consultation_data']['name'] ?? '', $next_question);
+        $this->set_telegram_state($chat_id, $state);
+
+        return array(
+            'text'     => $this->format_telegram_text($next_question),
+            'keyboard' => $this->get_telegram_cancel_keyboard(),
+        );
+    }
+
+    /**
+     * Send a Telegram message using the configured bot token.
+     */
+    private function send_telegram_message($chat_id, $text, $keyboard = null) {
+        $bot_token = trim((string) get_option('devxpert_telegram_bot_token', ''));
+        if ($bot_token === '') {
+            return false;
+        }
+
+        $body = array(
+            'chat_id'                  => $chat_id,
+            'text'                     => $text,
+            'disable_web_page_preview' => true,
+        );
+
+        if (is_array($keyboard)) {
+            $body['reply_markup'] = wp_json_encode($keyboard);
+        }
+
+        $response = wp_remote_post('https://api.telegram.org/bot' . rawurlencode($bot_token) . '/sendMessage', array(
+            'timeout' => 20,
+            'body'    => $body,
+        ));
+
+        return !is_wp_error($response);
+    }
+
+    /**
+     * Fetch an AI response for Telegram using the existing RAG handler.
+     */
+    private function get_telegram_ai_response($text, $state) {
+        if (!class_exists('DEVXPERT_Chatbot_RAG')) {
+            require_once DEVXPERT_CHATBOT_PLUGIN_DIR . 'devxpert-chatbot-rag-ai.php';
+        }
+
+        $history = array_slice($state['history'] ?? array(), -10);
+        $rag     = new DEVXPERT_Chatbot_RAG();
+        $result  = $rag->get_ai_response(sanitize_text_field($text), $history);
+
+        if (!empty($result['success']) && !empty($result['message'])) {
+            return $result['message'];
+        }
+
+        return '';
+    }
+
+    /**
+     * Persist a new lead from Telegram.
+     */
+    private function save_telegram_lead($lead_data, $message) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
+
+        $telegram_user = $message['from']['username'] ?? ($message['from']['first_name'] ?? 'telegram-user');
+        $lead = array(
+            'name'           => sanitize_text_field($lead_data['name'] ?? $telegram_user),
+            'email'          => sanitize_email($lead_data['email'] ?? ''),
+            'company'        => sanitize_text_field($lead_data['company'] ?? ''),
+            'location'       => sanitize_text_field($lead_data['location'] ?? ''),
+            'industry'       => sanitize_text_field($lead_data['industry'] ?? ''),
+            'platforms'      => sanitize_text_field($lead_data['platforms'] ?? ''),
+            'capabilities'   => sanitize_text_field($lead_data['capabilities'] ?? ''),
+            'service_type'   => sanitize_text_field($lead_data['service_type'] ?? ''),
+            'pain'           => sanitize_textarea_field($lead_data['pain'] ?? ''),
+            'initial_intent' => sanitize_text_field($lead_data['initial_intent'] ?? ''),
+            'lead_type'      => sanitize_text_field($lead_data['lead_type'] ?? ''),
+            'page_url'       => 'telegram://chat/' . sanitize_text_field((string) ($message['chat']['id'] ?? '')),
+            'created_at'     => current_time('mysql'),
+            'user_agent'     => 'Telegram Bot API',
+            'ip_address'     => 'telegram',
+        );
+
+        if (!is_email($lead['email'])) {
+            return false;
+        }
+
+        $existing_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table_name WHERE email = %s LIMIT 1",
+            $lead['email']
+        ));
+
+        if ($existing_id) {
+            return (int) $existing_id;
+        }
+
+        $inserted = $wpdb->insert(
+            $table_name,
+            $lead,
+            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        );
+
+        if ($inserted) {
+            $this->send_lead_notification($lead);
+            return (int) $wpdb->insert_id;
+        }
+
+        return false;
+    }
+
+    /**
+     * Update an existing lead with the rest of the Telegram consultation answers.
+     */
+    private function update_telegram_lead($lead_data) {
+        $email = sanitize_email($lead_data['email'] ?? '');
+        if (!is_email($email)) {
+            return false;
+        }
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'devxpert_chatbot_leads';
+        $update_data = array(
+            'company'      => sanitize_text_field($lead_data['company'] ?? ''),
+            'location'     => sanitize_text_field($lead_data['location'] ?? ''),
+            'industry'     => sanitize_text_field($lead_data['industry'] ?? ''),
+            'platforms'    => sanitize_text_field($lead_data['platforms'] ?? ''),
+            'capabilities' => sanitize_text_field($lead_data['capabilities'] ?? ''),
+            'service_type' => sanitize_text_field($lead_data['service_type'] ?? ''),
+            'pain'         => sanitize_textarea_field($lead_data['pain'] ?? ''),
+        );
+
+        $updated = $wpdb->update(
+            $table_name,
+            $update_data,
+            array('email' => $email),
+            array('%s', '%s', '%s', '%s', '%s', '%s', '%s'),
+            array('%s')
+        );
+
+        if ($updated !== false) {
+            $this->send_lead_update_notification($email, $update_data);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize user input for simple command matching.
+     */
+    private function normalize_telegram_input($text) {
+        $text = strtolower(trim(wp_strip_all_tags((string) $text)));
+        $text = preg_replace('/\s+/', ' ', $text);
+        return $text;
+    }
+
+    /**
+     * Strip lightweight website formatting for Telegram delivery.
+     */
+    private function format_telegram_text($text) {
+        $text = str_replace('**', '', (string) $text);
+        return trim(wp_strip_all_tags($text));
+    }
+
+    /**
+     * Load Telegram conversation state.
+     */
+    private function get_telegram_state($chat_id) {
+        $state = get_transient('devxpert_tg_state_' . md5((string) $chat_id));
+        return is_array($state) ? $state : array(
+            'mode'              => 'idle',
+            'consultation_step' => 0,
+            'consultation_data' => array(),
+            'selected_service'  => array(),
+            'lead_saved_early'  => false,
+            'history'           => array(),
+        );
+    }
+
+    /**
+     * Save Telegram conversation state for 24 hours.
+     */
+    private function set_telegram_state($chat_id, $state) {
+        set_transient('devxpert_tg_state_' . md5((string) $chat_id), $state, DAY_IN_SECONDS);
+    }
+
+    /**
+     * Reset Telegram conversation state.
+     */
+    private function reset_telegram_state($chat_id) {
+        delete_transient('devxpert_tg_state_' . md5((string) $chat_id));
+        return $this->get_telegram_state($chat_id);
+    }
+
+    /**
+     * Append a chat turn to Telegram AI history.
+     */
+    private function append_telegram_history($state, $role, $content) {
+        $state['history'][] = array(
+            'role'    => $role,
+            'content' => sanitize_textarea_field($content),
+        );
+        $state['history'] = array_slice($state['history'], -10);
+        return $state;
+    }
+
+    /**
+     * Build the primary Telegram reply keyboard.
+     */
+    private function get_telegram_main_keyboard() {
+        $questions = $this->get_chatbot_questions_data();
+        $services  = $questions['services'] ?? array();
+        $keyboard  = array();
+
+        foreach ($services as $service) {
+            if (!empty($service['text'])) {
+                $keyboard[] = array(array('text' => $service['text']));
+            }
+        }
+
+        return array(
+            'keyboard'          => $keyboard,
+            'resize_keyboard'   => true,
+            'one_time_keyboard' => false,
+        );
+    }
+
+    /**
+     * Build Telegram keyboard for service follow-up actions.
+     */
+    private function get_telegram_service_keyboard() {
+        return array(
+            'keyboard' => array(
+                array(
+                    array('text' => 'Share details'),
+                    array('text' => 'Book a call'),
+                ),
+                array(
+                    array('text' => 'Menu'),
+                ),
+            ),
+            'resize_keyboard'   => true,
+            'one_time_keyboard' => false,
+        );
+    }
+
+    /**
+     * Build Telegram keyboard for consultation mode.
+     */
+    private function get_telegram_cancel_keyboard() {
+        return array(
+            'keyboard' => array(
+                array(
+                    array('text' => 'Menu'),
+                ),
+            ),
+            'resize_keyboard'   => true,
+            'one_time_keyboard' => false,
+        );
     }
 
     /**
@@ -1452,6 +1920,11 @@ function devxpert_chatbot_activate() {
     add_option('devxpert_claude_api_key', '');
     add_option('devxpert_ai_enabled', false);
     add_option('devxpert_ai_fallback_message', "I don't have specific information about that. Would you like to speak with our team?");
+
+    // Telegram options
+    add_option('devxpert_telegram_enabled', false);
+    add_option('devxpert_telegram_bot_token', '');
+    add_option('devxpert_telegram_secret_token', wp_generate_password(32, false, false));
 }
 register_activation_hook(__FILE__, 'devxpert_chatbot_activate');
 
