@@ -80,10 +80,9 @@ class DEVXPERT_Talent_Chatbot {
         return "
         .devxpert-chatbot-wrapper,
         .devxpert-newsletter-overlay {
+            --color-brand-blue: {$accent};
             --devxpert-accent: {$accent};
-            --devxpert-accent-strong: {$accent};
-            --devxpert-brand-blue: {$accent};
-            font-family: 'SF Pro Text', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: var(--font-body);
         }";
     }
 
@@ -95,13 +94,9 @@ class DEVXPERT_Talent_Chatbot {
 
         return "
         .devxpert-admin {
+            --color-brand-blue: {$accent};
             --dx-accent: {$accent};
-            --dx-accent-strong: {$accent};
-            --dx-brand-color: {$accent};
-            --dx-ink: #0F172A;
-            --dx-panel-soft: #F8FAFC;
-            --dx-muted: #94A3B8;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: var(--font-body);
         }";
     }
 
@@ -199,8 +194,8 @@ class DEVXPERT_Talent_Chatbot {
         }
 
         wp_enqueue_style(
-            'devxpert-inter-font',
-            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+            'devxpert-google-fonts',
+            'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Sora:wght@100..800&display=swap',
             array(),
             null
         );
@@ -208,7 +203,7 @@ class DEVXPERT_Talent_Chatbot {
         wp_enqueue_style(
             'devxpert-chatbot-admin',
             DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/css/admin.css',
-            array(),
+            array('devxpert-google-fonts'),
             DEVXPERT_CHATBOT_VERSION
         );
 
@@ -226,6 +221,14 @@ class DEVXPERT_Talent_Chatbot {
 
         $version = DEVXPERT_CHATBOT_VERSION;
 
+        // Load Fonts for both Newsletter and Chatbot
+        wp_enqueue_style(
+            'devxpert-google-fonts',
+            'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Sora:wght@100..800&display=swap',
+            array(),
+            null
+        );
+
         // ─────────────────────────────────────────────────────────
         // NEWSLETTER: Loads independently — NOT affected by chatbot toggle
         // ─────────────────────────────────────────────────────────
@@ -233,7 +236,7 @@ class DEVXPERT_Talent_Chatbot {
             wp_enqueue_style(
                 'devxpert-newsletter-styles',
                 DEVXPERT_CHATBOT_PLUGIN_URL . 'assets/css/newsletter.css',
-                array(),
+                array('devxpert-google-fonts'),
                 $version
             );
 
