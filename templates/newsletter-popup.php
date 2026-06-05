@@ -42,9 +42,9 @@ if (!defined('ABSPATH')) {
             </p>
 
             <div class="devxpert-newsletter-benefits" aria-hidden="true">
-                <span class="devxpert-newsletter-benefit"><?php _e('Talent trends', 'devxpert-chatbot'); ?></span>
-                <span class="devxpert-newsletter-benefit"><?php _e('Delivery insights', 'devxpert-chatbot'); ?></span>
-                <span class="devxpert-newsletter-benefit"><?php _e('No spam', 'devxpert-chatbot'); ?></span>
+                <span class="devxpert-newsletter-benefit"><?php _e('Web trends', 'devxpert-chatbot'); ?></span>
+                <span class="devxpert-newsletter-benefit"><?php _e('SEO tips', 'devxpert-chatbot'); ?></span>
+                <span class="devxpert-newsletter-benefit"><?php _e('Performance', 'devxpert-chatbot'); ?></span>
             </div>
             
             <!-- Form -->

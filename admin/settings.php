@@ -24,9 +24,9 @@ if (!defined('ABSPATH')) {
         settings_fields('devxpert_chatbot_settings');
         do_settings_sections('devxpert_chatbot_settings');
         $brand_name   = get_option('devxpert_brand_name', 'DevXpert');
-        $chat_title   = get_option('devxpert_chatbot_title', $brand_name . ' Talent Assistant');
-        $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
-        $brand_color  = get_option('devxpert_brand_accent_color', '#BFA25E');
+        $chat_title   = get_option('devxpert_chatbot_title', $brand_name . ' Digital Project Assistant');
+        $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about custom websites, e-commerce, or performance optimization.');
+        $brand_color  = get_option('devxpert_brand_accent_color', '#2563EB');
         $telegram_webhook_url = rest_url('devxpert/v1/telegram/webhook');
         $telegram_secret = get_option('devxpert_telegram_secret_token', '');
         if ($telegram_secret === '') {
@@ -205,7 +205,7 @@ if (!defined('ABSPATH')) {
                     <th scope="row"><label for="devxpert_newsletter_description">Popup Description</label></th>
                     <td>
                         <textarea name="devxpert_newsletter_description" id="devxpert_newsletter_description"
-                            rows="3" class="large-text"><?php echo esc_textarea(get_option('devxpert_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.')); ?></textarea>
+                            rows="3" class="large-text"><?php echo esc_textarea(get_option('devxpert_newsletter_description', 'Get the latest insights on web development and digital optimization delivered to your inbox.')); ?></textarea>
                     </td>
                 </tr>
 

@@ -53,14 +53,14 @@ class DEVXPERT_Talent_Chatbot {
      * Return the configured chatbot title.
      */
     private function get_chatbot_title() {
-        return get_option('devxpert_chatbot_title', $this->get_brand_name() . ' Project Assistant');
+        return get_option('devxpert_chatbot_title', $this->get_brand_name() . ' Digital Project Assistant');
     }
 
     /**
      * Return the configured chatbot subtitle.
      */
     private function get_chatbot_subtitle() {
-        return get_option('devxpert_chatbot_subtitle', 'Ask about custom websites, e-commerce, or digital strategy.');
+        return get_option('devxpert_chatbot_subtitle', 'Ask about custom websites, e-commerce, or digital optimization.');
     }
 
     /**
@@ -82,6 +82,7 @@ class DEVXPERT_Talent_Chatbot {
         .devxpert-newsletter-overlay {
             --devxpert-accent: {$accent};
             --devxpert-accent-strong: {$accent};
+            --devxpert-brand-blue: {$accent};
             font-family: 'SF Pro Text', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }";
     }
@@ -96,6 +97,10 @@ class DEVXPERT_Talent_Chatbot {
         .devxpert-admin {
             --dx-accent: {$accent};
             --dx-accent-strong: {$accent};
+            --dx-brand-color: {$accent};
+            --dx-ink: #0F172A;
+            --dx-panel-soft: #F8FAFC;
+            --dx-muted: #94A3B8;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }";
     }
@@ -1905,7 +1910,7 @@ function devxpert_chatbot_activate() {
     add_option('devxpert_newsletter_enabled', false);
     add_option('devxpert_newsletter_delay', 5000);
     add_option('devxpert_newsletter_title', 'Stay Updated with ' . get_option('devxpert_brand_name', 'DevXpert'));
-    add_option('devxpert_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.');
+    add_option('devxpert_newsletter_description', 'Get the latest insights on web development and digital optimization delivered to your inbox.');
     add_option('devxpert_newsletter_button_text', 'Subscribe Now');
     add_option('devxpert_newsletter_show_once', true);
 

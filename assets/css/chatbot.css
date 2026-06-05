@@ -80,7 +80,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--devxpert-brand-blue) 0%, var(--devxpert-teal) 100%);
+    background: linear-gradient(135deg, var(--devxpert-accent) 0%, var(--devxpert-teal) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -151,7 +151,7 @@
 }
 
 .devxpert-message.user .devxpert-message-bubble {
-    background: var(--devxpert-brand-blue);
+    background: var(--devxpert-accent);
     color: var(--devxpert-white);
     border-bottom-right-radius: 2px;
     align-self: flex-end;
@@ -170,8 +170,8 @@
 
 .devxpert-option-btn {
     background: var(--devxpert-ice-blue);
-    border: 1px solid var(--devxpert-brand-blue);
-    color: var(--devxpert-brand-blue);
+    border: 1px solid var(--devxpert-accent);
+    color: var(--devxpert-accent);
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 13px;
@@ -181,7 +181,7 @@
 }
 
 .devxpert-option-btn:hover {
-    background: var(--devxpert-brand-blue);
+    background: var(--devxpert-accent);
     color: var(--devxpert-white);
 }
 
@@ -239,7 +239,7 @@
 }
 
 .devxpert-send-btn {
-    background: var(--devxpert-brand-blue);
+    background: var(--devxpert-accent);
     border: none;
     border-radius: 6px;
     width: 36px;
@@ -253,12 +253,12 @@
 }
 
 .devxpert-send-btn:hover {
-    background: var(--devxpert-blue-dark);
+    filter: brightness(1.1);
 }
 
 /* --- Floating Toggle --- */
 .devxpert-chat-toggle {
-    background: var(--devxpert-brand-blue);
+    background: var(--devxpert-accent);
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -269,10 +269,13 @@
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
     border: none;
-    transition: transform 0.2s;
+    transition: transform 0.2s, background 0.2s;
 }
 
-.devxpert-chat-toggle:hover { transform: scale(1.05); }
+.devxpert-chat-toggle:hover { 
+    transform: scale(1.05); 
+    filter: brightness(1.1);
+}
 
 .devxpert-chat-toggle #devxpert-close-icon { display: none; }
 .devxpert-chat-toggle.devxpert-active #devxpert-close-icon { display: block; }

@@ -213,11 +213,14 @@ jQuery(document).ready(function($) {
 <style>
 .button-primary {
     background: var(--dx-accent);
-    border-color: var(--dx-accent);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
 }
 
 .button-primary:hover {
-    background: #d4b670;
-    border-color: #d4b670;
+    background: var(--dx-accent-strong);
+    color: #fff;
+    transform: translateY(-1px);
 }
 </style>

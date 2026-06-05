@@ -299,13 +299,15 @@ jQuery(document).ready(function($) {
 <style>
 .button.view-lead-details {
     background: var(--dx-accent);
-    color: #000;
-    border-color: var(--dx-accent);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .button.view-lead-details:hover {
-    background: #d4b670;
-    border-color: #d4b670;
+    background: var(--dx-accent-strong);
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 .devxpert-lead-status {

@@ -4,7 +4,7 @@
 
 This repository is a WordPress plugin that delivers three connected capabilities:
 
-1. A frontend lead-capture chatbot for talent acquisition / consulting enquiries.
+1. A frontend lead-capture chatbot for **Web Development Agency** project enquiries.
 2. A frontend newsletter popup with subscriber capture.
 3. An optional AI response layer backed by a local RAG-style knowledge base and Anthropic Claude.
 
@@ -110,7 +110,7 @@ WordPress options are used heavily for configuration and question content.
   - homepage only
   - specific pages via URL, `id:123`, or `slug:name`
 - AI requests are rate-limited per IP with a transient.
-- The RAG implementation is lightweight keyword/fulltext retrieval, not embeddings.
+- The RAG implementation is keyword/fulltext retrieval.
 
 ## High-Value Files
 
@@ -125,14 +125,11 @@ WordPress options are used heavily for configuration and question content.
 - `admin/questions.php`
   Defines/editors the chatbot conversation structure.
 
-## Known Inconsistencies To Watch
+## Branding & UI
 
-- The repository naming/branding is mixed:
-  - plugin folder is `chatbot`
-  - class/constants use `DEVXPERT`
-  - plugin header says `DevXpert Chatbot`
-- There are Windows `:Zone.Identifier` files in the tree. They are not functional plugin files and should usually be ignored or cleaned deliberately, not edited casually.
-- The plugin now migrates legacy `yallo_*` option/table names into `devxpert_*` names on `admin_init`. Any future rename work should preserve or replace that migration path intentionally.
+- **Identity:** Digital Project Assistant for Web Development Agencies.
+- **Design System:** Navy Ink (`#0F172A`), Brand Blue (`#2563EB`), and Teal gradients.
+- **Dynamic CSS:** Variables are injected via PHP based on user settings to keep frontend/backend synchronized.
 
 ## Safe Change Strategy
 
@@ -142,18 +139,7 @@ When modifying this plugin:
 - Trace any frontend behavior through the matching template and JS file together.
 - Preserve nonce checks and capability checks on all admin/AJAX paths.
 - Preserve existing option names and DB schema unless intentionally migrating them.
-- If changing lead, subscriber, or AI data flows, check both:
-  - admin UI behavior
-  - frontend AJAX behavior
-- If changing RAG behavior, confirm both scrape-time storage and query-time retrieval.
-
-## Out Of Scope Unless Explicitly Requested
-
-- Large-scale framework rewrites.
-- Replacing jQuery with React/Vue.
-- Moving plugin data to external services.
-- Rebranding every DevXpert/DevXpert string across the codebase.
-- Broad schema redesigns without migration planning.
+- If changing lead, subscriber, or AI data flows, check both admin UI and frontend behavior.
 
 ## Practical Definition Of Done
 

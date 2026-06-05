@@ -268,7 +268,7 @@ class DEVXPERT_Chatbot_RAG {
         }
 
         // Prepare prompt for Claude
-        $system_prompt = "You are DevXpert's intelligent chatbot assistant. You help users understand DevXpert's services in tech talent, enterprise architecture, and IT consulting.
+        $system_prompt = "You are DevXpert's intelligent chatbot assistant. You help users understand DevXpert's services in custom web development, e-commerce, and digital optimization.
 
 IMPORTANT GUIDELINES:
 - Be professional but friendly

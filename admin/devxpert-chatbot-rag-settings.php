@@ -250,14 +250,15 @@ $brand_name = get_option('devxpert_brand_name', 'DevXpert');
 }
 
 .devxpert-info-panel {
-    background: #f7f8fb;
-    border: 1px solid #e5e7eb;
-    padding: 18px;
-    border-radius: 14px;
+    background: #F8FAFC;
+    border: 1px solid var(--dx-border);
+    padding: 24px;
+    border-radius: 18px;
 }
 
 .devxpert-info-panel ol {
     margin-left: 20px;
+    line-height: 1.8;
 }
 
 .devxpert-test-panel {
@@ -266,7 +267,7 @@ $brand_name = get_option('devxpert_brand_name', 'DevXpert');
 
 .devxpert-test-form {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
 }
 
@@ -275,22 +276,29 @@ $brand_name = get_option('devxpert_brand_name', 'DevXpert');
 }
 
 .devxpert-ai-response {
-    background: #f9f9f9;
-    padding: 15px;
-    border-left: 4px solid var(--dx-accent);
-    border-radius: 4px;
+    background: #F1F5F9;
+    padding: 20px;
+    border-left: 6px solid var(--dx-accent);
+    border-radius: 12px;
+    line-height: 1.6;
+    color: var(--dx-ink);
 }
 
 .devxpert-ai-sources {
-    background: #f0f0f0;
-    padding: 15px;
-    border-radius: 4px;
+    background: #F8FAFC;
+    padding: 20px;
+    border: 1px solid var(--dx-border);
+    border-radius: 12px;
 }
 
 .devxpert-ai-sources a {
-    display: block;
-    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
     text-decoration: none;
+    color: var(--dx-accent);
+    font-weight: 600;
 }
 
 .devxpert-ai-sources a:hover {
