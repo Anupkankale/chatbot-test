@@ -4,7 +4,7 @@
  * Plugin URI: https://devxpert.com
  * Update URI: https://devxpert.com/plugins/devxpert-chatbot
  * Description: An intelligent chatbot for DevXpert talent acquisition and consultation services with a sleek dark theme interface and Claude AI integration.
- * Version: 1.0.3
+ * Version: 1.0.6
  * Author: Anup
  * Author URI: https://anupkankale.com
    
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DEVXPERT_CHATBOT_VERSION', '1.0.3');
+define('DEVXPERT_CHATBOT_VERSION', '1.1.0');
 define('DEVXPERT_CHATBOT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DEVXPERT_CHATBOT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DEVXPERT_CHATBOT_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -1889,9 +1889,9 @@ function devxpert_chatbot_activate() {
     // Set default options
     add_option('devxpert_chatbot_enabled', true);
     add_option('devxpert_brand_name', 'DevXpert');
-    add_option('devxpert_chatbot_title', 'DevXpert Talent Assistant');
-    add_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
-    add_option('devxpert_brand_accent_color', '#BFA25E');
+    add_option('devxpert_chatbot_title', 'Digital Project Assistant');
+    add_option('devxpert_chatbot_subtitle', 'Ask about custom websites, e-commerce, or performance optimization.');
+    add_option('devxpert_brand_accent_color', '#2563EB');
     add_option('devxpert_chatbot_auto_open', true);
     add_option('devxpert_chatbot_scroll_trigger', 50);
     add_option('devxpert_chatbot_notification_email', get_option('admin_email'));

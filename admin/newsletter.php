@@ -1,3 +1,8 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+?>
 <div class="wrap devxpert-admin">
     <div class="devxpert-admin-header">
         <div>
@@ -18,7 +23,7 @@
     if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['subscriber_id'])) {
         check_admin_referer('delete_subscriber_' . $_GET['subscriber_id']);
         $wpdb->delete($table_name, array('id' => intval($_GET['subscriber_id'])), array('%d'));
-        echo '<div class="notice notice-success"><p>Subscriber deleted successfully.</p></div>';
+        echo '<div class="notice notice-success"><p>' . esc_html__('Subscriber deleted successfully.', 'devxpert-chatbot') . '</p></div>';
     }
     
     // Handle bulk delete
@@ -28,7 +33,7 @@
         foreach ($subscriber_ids as $subscriber_id) {
             $wpdb->delete($table_name, array('id' => $subscriber_id), array('%d'));
         }
-        echo '<div class="notice notice-success"><p>' . count($subscriber_ids) . ' subscriber(s) deleted successfully.</p></div>';
+        printf('<div class="notice notice-success"><p>%d %s</p></div>', count($subscriber_ids), esc_html__('subscriber(s) deleted successfully.', 'devxpert-chatbot'));
     }
     
     // Handle export

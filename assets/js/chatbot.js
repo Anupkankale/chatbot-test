@@ -1,6 +1,6 @@
 /**
  * DevXpert Talent Chatbot - Main JavaScript
- * v1.0.2 — Short messages, email-first lead capture
+ * v1.0.7 — Robust toggle logic, Cyan & Black theme
  */
 
 (function($) {
@@ -17,6 +17,7 @@
         consultationStep: 0,
         hasAutoOpened: false,
         leadSavedEarly: false,
+        initialisingTimer: null,
 
         // ── Data ─────────────────────────────────────────────
         messages: [],
@@ -36,296 +37,25 @@
         $closeIcon: null,
 
         // ── Welcome + Service Questions ───────────────────────
-        // These are loaded dynamically from WordPress on init
         questions: [],
-        
-        // ── Consultation Questions ────────────────────────────
-        // These are loaded dynamically from WordPress on init
         consultationQuestions: [],
         
-        // ── Load Questions Dynamically ─────────────────────────
-        loadQuestions: function() {
-            const self = this;
-            const cached = localStorage.getItem('devxpert_questions');
-            const cacheTime = localStorage.getItem('devxpert_questions_time');
-            const now = Date.now();
-            
-            // Use cache if less than 5 minutes old
-            if (cached && cacheTime && (now - parseInt(cacheTime)) < 300000) {
-                try {
-                    const data = JSON.parse(cached);
-                    self.applyQuestions(data);
-                    return Promise.resolve();
-                } catch(e) {
-                    console.error('DevXpert: Cache parse error', e);
-                }
-            }
-            
-            // Fetch from server
-            return $.post(devxpertChatbot.ajaxUrl, {
-                action: 'devxpert_get_questions'
-            })
-            .done(function(response) {
-                if (response.success && response.data) {
-                    localStorage.setItem('devxpert_questions', JSON.stringify(response.data));
-                    localStorage.setItem('devxpert_questions_time', now.toString());
-                    self.applyQuestions(response.data);
-                } else {
-                    console.warn('DevXpert: Questions load failed, using defaults');
-                    self.useDefaultQuestions();
-                }
-            })
-            .fail(function() {
-                console.warn('DevXpert: AJAX failed, using default questions');
-                self.useDefaultQuestions();
-            });
-        },
-        
-        useDefaultQuestions: function() {
-            // Fallback to hardcoded defaults
-            const defaultData = {
-                welcome: {
-                    text: "Hi, we're " + (devxpertChatbot.brandName || 'DevXpert') + " 👋\n\nHow can we help?"
-                },
-                services: [
-                    {
-                        text: 'Hire tech talent fast',
-                        message: "Great choice.\n\nWe help teams hire vetted specialists across AI, Data, Cloud, SAP, Oracle, Salesforce and more, often with qualified profiles shared in about 72 hours.",
-                        intent: 'Hire tech talent / build a squad',
-                        lead_type: 'details',
-                        cta_primary: '📋 Get matched candidate options',
-                        cta_secondary: '📞 Discuss my hiring need'
-                    },
-                    {
-                        text: 'Rescue a delayed project',
-                        message: "Understood.\n\nWe can quickly assess delivery issues, identify role or capability gaps, and help you stabilise the project with hands-on leadership support.",
-                        intent: 'Stabilise a troubled project',
-                        lead_type: 'call',
-                        cta_primary: '📞 Book a recovery call',
-                        cta_secondary: '📋 Send my project brief'
-                    },
-                    {
-                        text: 'Get architecture / IT strategy help',
-                        message: "Makes sense.\n\nWe provide architecture and strategy support to align delivery, platforms, and talent without locking you into a large consulting engagement.",
-                        intent: 'Enterprise Architecture / IT strategy',
-                        lead_type: 'call',
-                        cta_primary: '📞 Book a strategy call',
-                        cta_secondary: '📋 Share my roadmap challenge'
-                    },
-                    {
-                        text: 'I need help choosing the right option',
-                        message: "No problem.\n\nShare a little context and we'll recommend the best route, whether that's talent support, project rescue, or strategic guidance.",
-                        intent: 'Not sure / explore options',
-                        lead_type: 'details',
-                        cta_primary: '📋 Recommend the right solution',
-                        cta_secondary: '📞 Talk it through with an expert'
-                    }
-                ],
-                consultation: [
-                    {key: 'name', text: "Let's get this moving.\n\nWhat's your **full name?**"},
-                    {key: 'email', text: "Thanks **{name}**. What's your **work email** so we can follow up with the right next step?"},
-                    {key: 'company', text: "Which **company** are you with?"},
-                    {key: 'location', text: "Where is your **team based**?\n(e.g. Dubai, UAE)"},
-                    {key: 'industry', text: "Which **industry** best matches your business?\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"},
-                    {key: 'platforms', text: "Which **core platform or ecosystem** matters most here?\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"},
-                    {key: 'capabilities', text: "Where is the **biggest capability gap** right now?\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"},
-                    {key: 'service_type', text: "What type of **support** are you looking for?\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"},
-                    {key: 'pain', text: "What is the **main business or delivery challenge** you want solved?"}
-                ]
-            };
-            this.applyQuestions(defaultData);
-            console.log('✅ Default questions loaded');
-        },
-        
-        applyQuestions: function(data) {
-            const buildPrimaryCta = function(service) {
-                if (service.cta_primary) {
-                    return service.cta_primary;
-                }
-
-                if (service.lead_type === 'call') {
-                    return '📞 Book my strategy call';
-                }
-
-                return '📋 Get matched options';
-            };
-
-            const buildSecondaryCta = function(service) {
-                if (service.cta_secondary) {
-                    return service.cta_secondary;
-                }
-
-                if (service.lead_type === 'call') {
-                    return '✉️ Send my requirements';
-                }
-
-                return '💬 Talk to the team';
-            };
-
-            // Build questions array from loaded data
-            this.questions = [
-                {
-                    id: 0,
-                    keywords: ['hi', 'hello', 'start', 'menu'],
-                    answer: data.welcome.text,
-                    options: data.services.map((service, i) => ({
-                        text: service.text,
-                        nextId: 10 + i,
-                        intent: service.intent,
-                        leadType: service.lead_type
-                    }))
-                }
-            ];
-            
-            // Add service response questions with consultation buttons
-            data.services.forEach((service, i) => {
-                this.questions.push({
-                    id: 10 + i,
-                    answer: service.message,
-                    options: [
-                        { text: buildPrimaryCta(service), nextId: 300, leadType: service.lead_type },
-                        { text: buildSecondaryCta(service), nextId: 300, leadType: service.lead_type },
-                        { text: '← Back', nextId: 0 }
-                    ]
-                });
-            });
-            
-            // Build consultation questions from loaded data
-            this.consultationQuestions = data.consultation.map(q => ({
-                key: q.key,
-                text: q.text
-            }));
-        },
-
-        // ── OLD HARDCODED QUESTIONS (kept as fallback) ─────────
-        questions_backup: [
-            {
-                id: 0,
-                keywords: ['hi', 'hello', 'start', 'menu'],
-                answer: "Hi, we're **" + (devxpertChatbot.brandName || 'DevXpert') + "** 👋\n\nHow can we help?",
-                options: [
-                    { text: '🧑‍💻 Hire tech talent / squad',      nextId: 10, intent: 'Hire tech talent / build a squad' },
-                    { text: '🔧 Stabilise a project',             nextId: 11, intent: 'Stabilise a project / programme' },
-                    { text: '🏛 EA / IT strategy support',        nextId: 12, intent: 'TS/EA as a Service' },
-                    { text: '🤔 Not sure – need guidance',        nextId: 13, intent: 'Not sure – need guidance' }
-                ]
-            },
-            {
-                id: 10,
-                keywords: ['hire', 'talent', 'squad'],
-                answer: "Great – **tech talent & squads**.\n\nVetted profiles across AI, Data, Cloud, SAP, Oracle, Salesforce & more – delivered in ~72 hrs.",
-                options: [
-                    { text: '📋 Share my details', nextId: 300, leadType: 'details' },
-                    { text: '📞 Book a call',       nextId: 300, leadType: 'call' },
-                    { text: '← Back',               nextId: 0 }
-                ]
-            },
-            {
-                id: 11,
-                keywords: ['stabilise', 'project', 'programme'],
-                answer: "Got it – **stabilise a project**.\n\nWe use architects & delivery leads to find and fix talent or role clarity gaps fast.",
-                options: [
-                    { text: '📋 Share my details', nextId: 300, leadType: 'details' },
-                    { text: '📞 Book a call',       nextId: 300, leadType: 'call' },
-                    { text: '← Back',               nextId: 0 }
-                ]
-            },
-            {
-                id: 12,
-                keywords: ['ea', 'strategy', 'architecture'],
-                answer: "Understood – **EA / IT strategy**.\n\nWe provide Chief Architect capacity to align roadmaps and talent – no big consulting lock-in.",
-                options: [
-                    { text: '📋 Share my details', nextId: 300, leadType: 'details' },
-                    { text: '📞 Book a call',       nextId: 300, leadType: 'call' },
-                    { text: '← Back',               nextId: 0 }
-                ]
-            },
-            {
-                id: 13,
-                keywords: ['not sure', 'guidance'],
-                answer: "No problem – we'll figure it out together.\n\nTell us a little and we'll recommend the right next step.",
-                options: [
-                    { text: '📋 Share my details', nextId: 300, leadType: 'details' },
-                    { text: '📞 Book a call',       nextId: 300, leadType: 'call' },
-                    { text: '← Back',               nextId: 0 }
-                ]
-            }
-        ],
-
-        // ── Consultation Questions ────────────────────────────
-        // Lead saved after Q2 (name + email both collected)
-        consultationQuestions: [
-            {
-                key: 'name',
-                text: "What's your **full name?**"
-            },
-            {
-                key: 'email',
-                text: "Thanks {name}! Your **work email?**"
-            },
-            {
-                key: 'company',
-                text: "Your **company** name?"
-            },
-            {
-                key: 'location',
-                text: "**Where** are you based?\n(e.g. Dubai, UAE)"
-            },
-            {
-                key: 'industry',
-                text: "**Industry?**\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"
-            },
-            {
-                key: 'platforms',
-                text: "**Core platform?**\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"
-            },
-            {
-                key: 'capabilities',
-                text: "**Biggest gap?**\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"
-            },
-            {
-                key: 'service_type',
-                text: "**What do you need?**\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"
-            },
-            {
-                key: 'pain',
-                text: "In **one line** – what's the main challenge?"
-            }
-        ],
-
         // ── Init ─────────────────────────────────────────────
         init: function() {
             const self = this;
             
-            // Cache DOM elements immediately (before loading questions)
+            // 1. Cache DOM elements immediately
             this.cacheDom();
             
-            // Load questions from WordPress, then initialize rest
+            // 2. Bind Toggle Events immediately (so button is never "dead")
+            this.bindToggleEvent();
+
+            // 3. Load questions from WordPress, then bind rest
             this.loadQuestions().always(function() {
-                self.bindEvents();
+                self.bindFormEvents();
                 self.bindMobileKeyboard();
                 self.checkAutoOpen();
-
-                // ── Startup diagnostics ──────────────────────────
-                const checks = {
-                    'Toggle button (#devxpert-chat-toggle)':    self.$toggle.length,
-                    'Chat window (#devxpert-chatbot-window)':   self.$window.length,
-                    'Messages container':                    self.$messagesContainer.length,
-                    'Input field':                           self.$input.length,
-                    'Send button':                           self.$sendBtn.length,
-                    'devxpertChatbot config':                   typeof devxpertChatbot !== 'undefined' ? 1 : 0,
-                    'Questions loaded':                      self.questions.length > 0 ? 1 : 0,
-                };
-                let allOk = true;
-                Object.keys(checks).forEach(function(label) {
-                    if (!checks[label]) {
-                        console.error('❌ DevXpert Chatbot: Missing — ' + label);
-                        allOk = false;
-                    }
-                });
-                if (allOk) {
-                    console.log('✅ DevXpert Chatbot: Initialised OK. Click the button to open.');
-                }
+                console.log('✅ DevXpert Chatbot: Initialised');
             });
         },
 
@@ -340,12 +70,20 @@
             this.$closeIcon         = $('#devxpert-close-icon');
         },
 
-        // ── Events ───────────────────────────────────────────
-        bindEvents: function() {
+        bindToggleEvent: function() {
             const self = this;
+            this.$toggle.off('click').on('click', function(e) {
+                e.preventDefault();
+                self.toggleChat();
+            });
+            $('#devxpert-chat-close').off('click').on('click', function(e) {
+                e.preventDefault();
+                self.closeChat();
+            });
+        },
 
-            this.$toggle.on('click', function() { self.toggleChat(); });
-            $('#devxpert-chat-close').on('click', function() { self.closeChat(); });
+        bindFormEvents: function() {
+            const self = this;
 
             this.$form.on('submit', function(e) {
                 e.preventDefault();
@@ -376,6 +114,91 @@
             });
         },
 
+        // ── Load Questions Dynamically ─────────────────────────
+        loadQuestions: function() {
+            const self = this;
+            const cached = localStorage.getItem('devxpert_questions');
+            const cacheTime = localStorage.getItem('devxpert_questions_time');
+            const now = Date.now();
+            
+            if (cached && cacheTime && (now - parseInt(cacheTime)) < 300000) {
+                try {
+                    const data = JSON.parse(cached);
+                    self.applyQuestions(data);
+                    return $.Deferred().resolve().promise();
+                } catch(e) {
+                    console.error('DevXpert: Cache parse error', e);
+                }
+            }
+            
+            return $.post(devxpertChatbot.ajaxUrl, {
+                action: 'devxpert_get_questions'
+            })
+            .done(function(response) {
+                if (response.success && response.data) {
+                    localStorage.setItem('devxpert_questions', JSON.stringify(response.data));
+                    localStorage.setItem('devxpert_questions_time', now.toString());
+                    self.applyQuestions(response.data);
+                } else {
+                    self.useDefaultQuestions();
+                }
+            })
+            .fail(function() {
+                self.useDefaultQuestions();
+            });
+        },
+
+        applyQuestions: function(data) {
+            const self = this;
+            const buildPrimaryCta = (service) => service.cta_primary || (service.lead_type === 'call' ? '📞 Book my strategy call' : '📋 Get matched options');
+            const buildSecondaryCta = (service) => service.cta_secondary || (service.lead_type === 'call' ? '✉️ Send my requirements' : '💬 Talk to the team');
+
+            this.questions = [{
+                id: 0,
+                keywords: ['hi', 'hello', 'start', 'menu'],
+                answer: data.welcome.text,
+                options: data.services.map((service, i) => ({
+                    text: service.text,
+                    nextId: 10 + i,
+                    intent: service.intent,
+                    leadType: service.lead_type
+                }))
+            }];
+            
+            data.services.forEach((service, i) => {
+                this.questions.push({
+                    id: 10 + i,
+                    answer: service.message,
+                    options: [
+                        { text: buildPrimaryCta(service), nextId: 300, leadType: service.lead_type },
+                        { text: buildSecondaryCta(service), nextId: 300, leadType: service.lead_type },
+                        { text: '← Back', nextId: 0 }
+                    ]
+                });
+            });
+            
+            this.consultationQuestions = data.consultation.map(q => ({
+                key: q.key,
+                text: q.text
+            }));
+        },
+
+        useDefaultQuestions: function() {
+            // Minimal fallback to avoid total failure
+            const brand = (typeof devxpertChatbot !== 'undefined' ? devxpertChatbot.brandName : 'DevXpert');
+            this.applyQuestions({
+                welcome: { text: "Hi, we're " + brand + " 👋" },
+                services: [
+                    { text: 'Hire tech talent', message: "We help teams hire vetted specialists.", intent: 'hire', lead_type: 'details' },
+                    { text: 'IT strategy help', message: "We provide architecture and strategy support.", intent: 'strategy', lead_type: 'call' }
+                ],
+                consultation: [
+                    {key: 'name', text: "What's your **full name?**"},
+                    {key: 'email', text: "Your **work email?**"}
+                ]
+            });
+        },
+
         // ── Auto open ────────────────────────────────────────
         checkAutoOpen: function() {
             if (!devxpertChatbot.autoOpen) return;
@@ -392,51 +215,45 @@
 
         // ── Chat open / close / toggle ────────────────────────
         toggleChat: function() {
-            this.isOpen ? this.closeChat() : this.openChat();
+            const isCurrentlyOpen = this.$window.hasClass('devxpert-open');
+            isCurrentlyOpen ? this.closeChat() : this.openChat();
         },
 
         openChat: function() {
             const self = this;
             this.isOpen = true;
-            this.$window.addClass('devxpert-open');
-            this.$window.attr('aria-hidden', 'false');
-            this.$toggle.attr('aria-expanded', 'true');
-            this.$chatIcon.hide();
-            this.$closeIcon.show();
-            this.$input.trigger('focus');
+            this.$window.addClass('devxpert-open').attr('aria-hidden', 'false');
+            this.$toggle.addClass('devxpert-active').attr('aria-expanded', 'true');
+            
+            // Short delay before focus to ensure animation visibility
+            setTimeout(() => { self.$input.trigger('focus'); }, 300);
             
             if (this.messages.length === 0) {
-                // Safety check: if questions not loaded yet, wait
-                if (this.questions.length === 0) {
-                    console.log('⏳ Waiting for questions to load...');
-                    setTimeout(function() {
-                        self.showTypingIndicator();
-                        setTimeout(() => {
-                            self.hideTypingIndicator();
-                            self.askQuestionById(0);
-                        }, 600);
-                    }, 500);
-                } else {
-                    this.showTypingIndicator();
+                // Clear any existing welcome timers to prevent double-starts
+                if (this.initialisingTimer) clearTimeout(this.initialisingTimer);
+                
+                this.initialisingTimer = setTimeout(function() {
+                    self.showTypingIndicator();
                     setTimeout(() => {
-                        this.hideTypingIndicator();
-                        this.askQuestionById(0);
-                    }, 600);
-                }
+                        self.hideTypingIndicator();
+                        self.askQuestionById(0);
+                    }, 800);
+                }, 400);
             }
         },
 
         closeChat: function() {
             this.isOpen = false;
-            this.$window.removeClass('devxpert-open');
-            this.$window.attr('aria-hidden', 'true');
-            this.$toggle.attr('aria-expanded', 'false');
-            this.$chatIcon.show();
-            this.$closeIcon.hide();
-            this.$toggle.trigger('focus');
+            this.$window.removeClass('devxpert-open').attr('aria-hidden', 'true');
+            this.$toggle.removeClass('devxpert-active').attr('aria-expanded', 'false');
+            
+            // Clean up timers if they closed it while it was "about to start"
+            if (this.messages.length === 0 && this.initialisingTimer) {
+                clearTimeout(this.initialisingTimer);
+            }
         },
 
-        // ── Message routing ───────────────────────────────────
+        // ── Message handling ───────────────────────────────────
         handleUserInput: function(userMessage) {
             if (this.isInputDisabled || this.isChatFinished) return;
             this.addMessage(userMessage, 'user');
@@ -457,11 +274,8 @@
             }, 500);
         },
 
-        // ── AI AJAX call ──────────────────────────────────────
         getAIResponse: function(userMessage) {
             const self = this;
-
-            // Build history from prior messages (exclude current user message at end)
             const history = this.messages.slice(-6, -1).map(m => ({
                 role:    m.sender === 'user' ? 'user' : 'assistant',
                 content: m.text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/<br>/g, '\n'),
@@ -489,14 +303,12 @@
 
         processQuestion: function(input) {
             const lower = input.toLowerCase();
-            for (const q of this.questions) {
-                if (q.keywords.some(k => lower.includes(k))) {
-                    this.addMessage(q.answer, 'bot', q.options);
-                    return;
-                }
+            const q = this.questions.find(q => q.keywords.some(k => lower.includes(k)));
+            if (q) {
+                this.addMessage(q.answer, 'bot', q.options);
+            } else {
+                this.addMessage("How else can I help? Please choose an option below:", 'bot', this.questions[0].options);
             }
-            this.addMessage("Please choose one of the options below 👇", 'bot',
-                this.questions[0].options);
         },
 
         askQuestionById: function(id) {
@@ -504,7 +316,6 @@
             if (q) this.addMessage(q.answer, 'bot', q.options);
         },
 
-        // ── Option click ──────────────────────────────────────
         handleOptionClick: function(option) {
             this.addMessage(option.text, 'user');
             if (option.intent) this.consultationData.initial_intent = option.intent;
@@ -513,57 +324,31 @@
             this.showTypingIndicator();
             setTimeout(() => {
                 this.hideTypingIndicator();
-                
-                // Handle action-based buttons
                 if (option.action) {
                     this.handleAction(option.action, option);
-                    return;
-                }
-                
-                // Handle nextId navigation
-                if (option.nextId === 300) {
+                } else if (option.nextId === 300) {
                     this.startConsultation();
-                } else if (option.nextId) {
+                } else if (option.nextId !== undefined) {
                     this.askQuestionById(option.nextId);
                 }
-            }, 500);
+            }, 600);
         },
         
-        // ── Handle action buttons ─────────────────────────────
-        handleAction: function(action, option) {
+        handleAction: function(action) {
             if (action === 'continue') {
-                // User wants to continue with remaining questions
-                this.continueToFullForm();
-            } else if (action === 'submit') {
-                this.confirmAndSubmit();
-            } else if (action === 'edit') {
-                this.editInformation();
-            } else if (action === 'cancel') {
-                this.cancelConsultation();
-            } else if (action === 'edit_field' && option.field) {
-                this.handleFieldEdit(option.field);
-            } else if (action === 'back') {
-                this.finalizeConsultation();
+                this.isInputDisabled = false;
+                this.updateInputState();
+                this.showTypingIndicator();
+                setTimeout(() => {
+                    this.hideTypingIndicator();
+                    this.askConsultationQuestion();
+                }, 400);
             }
         },
-        
-        // ── Continue to remaining questions (Location onwards) ─
-        continueToFullForm: function() {
-            this.isInputDisabled = false;
-            this.updateInputState();
-            
-            // Continue from question 4 (location)
-            this.showTypingIndicator();
-            setTimeout(() => {
-                this.hideTypingIndicator();
-                this.askConsultationQuestion();
-            }, 400);
-        },
 
-        // ── Consultation ──────────────────────────────────────
+        // ── Consultation Flow ──────────────────────────────────
         startConsultation: function() {
             this.isConsultationActive = true;
-            this.isInputDisabled      = false;
             this.consultationStep     = 0;
             this.updateInputState();
             this.askConsultationQuestion();
@@ -574,7 +359,6 @@
             if (!q) return;
             this.isInputDisabled = false;
             this.updateInputState();
-            // Replace {name} placeholder with collected name
             const text = q.text.replace('{name}', this.consultationData.name || '');
             this.addMessage(text, 'bot');
         },
@@ -583,43 +367,32 @@
             const q = this.consultationQuestions[this.consultationStep];
             if (!q) return;
 
-            // Email validation
             if (q.key === 'email' && !this.isValidEmail(answer)) {
-                this.addMessage("That doesn't look like a valid email. Please try again.", 'bot');
+                this.addMessage("Please provide a valid work email address.", 'bot');
                 return;
             }
 
             this.consultationData[q.key] = answer;
             this.consultationStep++;
 
-            // ✅ Save lead after BOTH name + email collected (step 2)
             if (this.consultationStep === 2 && !this.leadSavedEarly) {
                 this.saveEarlyLead();
             }
 
-            // PAUSE after Company (step 3) - Show thank you + optional continue button
             if (this.consultationStep === 3) {
-                // Update lead with company info
-                if (this.leadSavedEarly) {
-                    this.updateLead();
-                }
-                
+                if (this.leadSavedEarly) this.updateLead();
                 this.showTypingIndicator();
                 setTimeout(() => {
                     this.hideTypingIndicator();
                     this.addMessage(
-                        `Thanks for connecting with **${devxpertChatbot.brandName || 'DevXpert'}**! 🙏\n\nOur team will get back to you within 24 hours.\n\nWould you like to give more information on your requirement?`,
+                        `Thanks! Our team will get back to you within 24 hours. Would you like to provide more details about your requirement?`,
                         'bot',
-                        [
-                            { text: '📋 Give More Information', action: 'continue' }
-                        ]
+                        [{ text: '📋 Provide More Details', action: 'continue' }]
                     );
-                    
-                    // Chat is basically finished, but user can optionally continue
                     this.isInputDisabled = true;
                     this.updateInputState();
                 }, 600);
-                return; // Stop here, wait for optional button click
+                return;
             }
 
             if (this.consultationStep < this.consultationQuestions.length) {
@@ -633,105 +406,51 @@
             }
         },
 
-        isValidEmail: function(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        },
+        isValidEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
 
-        // ── Final submission after all 9 questions ───────────
         finalizeConsultation: function() {
             this.isChatFinished  = true;
-            this.isInputDisabled = true;
             this.updateInputState();
-
-            const name  = this.consultationData.name  || 'there';
-            const email = this.consultationData.email || 'your email';
-
-            this.addMessage(
-                `Thanks, **${name}**! 🙌\n\nWe'll be in touch at **${email}** within 24 hrs.`,
-                'bot'
-            );
-
-            if (!this.leadSavedEarly) {
-                this.submitLead();
-            } else {
-                this.updateLead();
-            }
+            const name = this.consultationData.name || 'there';
+            this.addMessage(`Thank you, **${name}**! We've received your request and will be in touch shortly.`, 'bot');
+            this.updateLead();
         },
 
-        // ── AJAX: save lead after name + email ───────────────
         saveEarlyLead: function() {
-            const self = this;
             this.leadSavedEarly = true;
-
             $.post(devxpertChatbot.ajaxUrl, {
-                action:         'devxpert_submit_lead',
-                nonce:          devxpertChatbot.nonce,
-                name:           this.consultationData.name  || '',
-                email:          this.consultationData.email || '',
-                company:        '',
-                location:       '',
-                industry:       '',
-                platforms:      '',
-                capabilities:   '',
-                service_type:   '',
-                pain:           '',
+                action: 'devxpert_submit_lead',
+                nonce: devxpertChatbot.nonce,
+                name: this.consultationData.name || '',
+                email: this.consultationData.email || '',
                 initial_intent: this.consultationData.initial_intent || '',
-                lead_type:      this.consultationData.lead_type      || '',
-                page_url:       window.location.href,
-                early_save:     true
-            })
-            .done(function(r) {
-                if (r.success && r.data && r.data.lead_id) {
-                    self.savedLeadId = r.data.lead_id;
-                }
+                lead_type: this.consultationData.lead_type || '',
+                page_url: window.location.href,
+                early_save: true
             });
         },
 
-        // ── AJAX: update lead with remaining answers ───────────
         updateLead: function() {
             $.post(devxpertChatbot.ajaxUrl, {
-                action:       'devxpert_update_lead',
-                nonce:        devxpertChatbot.nonce,
-                email:        this.consultationData.email        || '',
-                company:      this.consultationData.company      || '',
-                location:     this.consultationData.location     || '',
-                industry:     this.consultationData.industry     || '',
-                platforms:    this.consultationData.platforms    || '',
+                action: 'devxpert_update_lead',
+                nonce: devxpertChatbot.nonce,
+                email: this.consultationData.email || '',
+                company: this.consultationData.company || '',
+                location: this.consultationData.location || '',
+                industry: this.consultationData.industry || '',
+                platforms: this.consultationData.platforms || '',
                 capabilities: this.consultationData.capabilities || '',
                 service_type: this.consultationData.service_type || '',
-                pain:         this.consultationData.pain         || ''
+                pain: this.consultationData.pain || ''
             });
         },
 
-        // ── AJAX: full submit (fallback if early save missed) ──
-        submitLead: function() {
-            $.post(devxpertChatbot.ajaxUrl, {
-                action:         'devxpert_submit_lead',
-                nonce:          devxpertChatbot.nonce,
-                name:           this.consultationData.name           || '',
-                email:          this.consultationData.email          || '',
-                company:        this.consultationData.company        || '',
-                location:       this.consultationData.location       || '',
-                industry:       this.consultationData.industry       || '',
-                platforms:      this.consultationData.platforms      || '',
-                capabilities:   this.consultationData.capabilities   || '',
-                service_type:   this.consultationData.service_type   || '',
-                pain:           this.consultationData.pain           || '',
-                initial_intent: this.consultationData.initial_intent || '',
-                lead_type:      this.consultationData.lead_type      || '',
-                page_url:       window.location.href
-            });
-        },
-
-        // ── Render message bubble ─────────────────────────────
-        addMessage: function(text, sender, options) {
-            options = options || [];
+        // ── Rendering ─────────────────────────────────────────
+        addMessage: function(text, sender, options = []) {
             this.messages.push({ text, sender, options });
-
-            const $msg    = $('<div>').addClass('devxpert-message').addClass(sender);
+            const $msg = $('<div>').addClass('devxpert-message').addClass(sender);
             const $bubble = $('<div>').addClass('devxpert-message-bubble');
-            const html    = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                 .replace(/\n/g, '<br>');
+            const html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
             $bubble.html(html);
             $msg.append($bubble);
 
@@ -746,20 +465,16 @@
             }
 
             $msg.append($('<span>').addClass('devxpert-message-time').text(this.formatTime()));
-
             this.$messagesContainer.append($msg);
             this.scrollToBottom();
         },
 
-        formatTime: function() {
+        formatTime: () => {
             const now = new Date();
-            return now.getHours().toString().padStart(2, '0') + ':' +
-                   now.getMinutes().toString().padStart(2, '0');
+            return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
         },
 
-        // ── Typing indicator ──────────────────────────────────
         showTypingIndicator: function() {
-            this.isBotTyping = true;
             const $t = $('<div>').addClass('devxpert-message bot').attr('id', 'devxpert-typing');
             const $i = $('<div>').addClass('devxpert-typing-indicator');
             for (let i = 0; i < 3; i++) $i.append($('<span>').addClass('devxpert-typing-dot'));
@@ -768,57 +483,45 @@
             this.scrollToBottom();
         },
 
-        hideTypingIndicator: function() {
-            this.isBotTyping = false;
-            $('#devxpert-typing').remove();
-        },
+        hideTypingIndicator: () => $('#devxpert-typing').remove(),
 
-        // ── Input state ───────────────────────────────────────
         updateInputState: function() {
+            let placeholder = 'Type a message…';
+            let disabled = false;
             if (this.isChatFinished) {
-                this.$input.prop('disabled', true).attr('placeholder', 'Chat ended – thank you!');
-                this.$sendBtn.prop('disabled', true);
+                placeholder = 'Chat ended – thank you!';
+                disabled = true;
             } else if (this.isInputDisabled) {
-                this.$input.prop('disabled', true).attr('placeholder', 'Please choose an option above…');
-                this.$sendBtn.prop('disabled', true);
+                placeholder = 'Please choose an option above…';
+                disabled = true;
             } else if (this.isConsultationActive) {
-                this.$input.prop('disabled', false).attr('placeholder', 'Type your answer…');
-                this.$sendBtn.prop('disabled', false);
-            } else {
-                this.$input.prop('disabled', false).attr('placeholder', 'Type a message…');
-                this.$sendBtn.prop('disabled', false);
+                placeholder = 'Type your answer…';
             }
+            this.$input.prop('disabled', disabled).attr('placeholder', placeholder);
+            this.$sendBtn.prop('disabled', disabled);
         },
 
         scrollToBottom: function() {
-            setTimeout(() => {
-                this.$messagesContainer.scrollTop(this.$messagesContainer[0].scrollHeight);
-            }, 100);
+            const container = this.$messagesContainer[0];
+            if (container) {
+                setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+            }
         },
 
-        // ── Mobile keyboard handling ──────────────────────────
         bindMobileKeyboard: function() {
             if (!window.visualViewport) return;
             const self = this;
             const $wrapper = this.$window.closest('.devxpert-chatbot-wrapper');
-
-            window.visualViewport.addEventListener('resize', function() {
+            window.visualViewport.addEventListener('resize', () => {
                 if (!self.isOpen) return;
-                const keyboardHeight = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-                if (keyboardHeight > 100) {
-                    $wrapper.css('bottom', (keyboardHeight + 10) + 'px');
-                    self.$window.css('max-height', (window.visualViewport.height - 90) + 'px');
-                } else {
-                    $wrapper.css('bottom', '');
-                    self.$window.css('max-height', '');
-                }
+                const h = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+                $wrapper.css('bottom', h > 100 ? (h + 10) + 'px' : '');
+                self.$window.css('max-height', h > 100 ? (window.visualViewport.height - 90) + 'px' : '');
                 self.scrollToBottom();
             });
         }
     };
 
-    $(document).ready(function() {
-        DEVXPERT_CHATBOT.init();
-    });
+    $(document).ready(() => DEVXPERT_CHATBOT.init());
 
 })(jQuery);

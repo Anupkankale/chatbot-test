@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 $chat_title    = get_option('devxpert_chatbot_title', get_option('devxpert_brand_name', 'DevXpert') . ' Talent Assistant');
 $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
 ?>
@@ -22,12 +26,12 @@ $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, deli
                         </svg>
                     </div>
                     <div class="devxpert-chat-meta">
-                        <p class="devxpert-chat-status">Live assistant</p>
+                        <p class="devxpert-chat-status"><?php _e('Live assistant', 'devxpert-chatbot'); ?></p>
                         <h3 id="devxpert-chat-title" class="devxpert-chat-title"><?php echo esc_html($chat_title); ?></h3>
                         <p id="devxpert-chat-subtitle" class="devxpert-chat-subtitle"><?php echo esc_html($chat_subtitle); ?></p>
                     </div>
                 </div>
-                <button type="button" id="devxpert-chat-close" class="devxpert-close-btn" aria-label="Close chat">
+                <button type="button" id="devxpert-chat-close" class="devxpert-close-btn" aria-label="<?php esc_attr_e('Close chat', 'devxpert-chatbot'); ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -43,21 +47,21 @@ $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, deli
             <!-- Input Area -->
             <div class="devxpert-input-area">
                 <form id="devxpert-chat-form" class="devxpert-input-form">
-                    <label for="devxpert-message-input" class="devxpert-sr-only">Type your message</label>
+                    <label for="devxpert-message-input" class="devxpert-sr-only"><?php _e('Type your message', 'devxpert-chatbot'); ?></label>
                     <input 
                         type="text" 
                         id="devxpert-message-input" 
                         class="devxpert-message-input" 
-                        placeholder="Type your message or use the options..."
+                        placeholder="<?php esc_attr_e('Type your message or use the options...', 'devxpert-chatbot'); ?>"
                         autocomplete="off"
                     />
-                    <button type="submit" id="devxpert-send-btn" class="devxpert-send-btn" aria-label="Send message">
+                    <button type="submit" id="devxpert-send-btn" class="devxpert-send-btn" aria-label="<?php esc_attr_e('Send message', 'devxpert-chatbot'); ?>">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                         </svg>
                     </button>
                 </form>
-                <p class="devxpert-input-help">Use the quick options for faster routing, or type your question directly.</p>
+                <p class="devxpert-input-help"><?php _e('Use the quick options for faster routing, or type your question directly.', 'devxpert-chatbot'); ?></p>
             </div>
         </div>
     </div>
@@ -67,17 +71,17 @@ $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, deli
         type="button"
         id="devxpert-chat-toggle"
         class="devxpert-chat-toggle"
-        aria-label="Open chat"
+        aria-label="<?php esc_attr_e('Open chat', 'devxpert-chatbot'); ?>"
         aria-controls="devxpert-chatbot-window"
         aria-expanded="false"
     >
         <svg id="devxpert-chat-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        <svg id="devxpert-close-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg id="devxpert-close-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
-        <span class="devxpert-toggle-badge" aria-hidden="true">Ask</span>
+        <span class="devxpert-toggle-badge" aria-hidden="true"><?php _e('Ask', 'devxpert-chatbot'); ?></span>
     </button>
 </div>

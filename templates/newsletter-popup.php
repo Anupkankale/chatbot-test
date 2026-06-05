@@ -1,3 +1,8 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+?>
 <!-- DevXpert Newsletter Popup -->
 <?php $brand_name = get_option('devxpert_brand_name', 'DevXpert'); ?>
 <div id="devxpert-newsletter-popup" class="devxpert-newsletter-overlay" style="display: none;">
@@ -8,7 +13,7 @@
         aria-labelledby="devxpert-newsletter-title"
         aria-describedby="devxpert-newsletter-description"
     >
-        <button type="button" id="devxpert-newsletter-close" class="devxpert-newsletter-close" aria-label="Close newsletter popup">
+        <button type="button" id="devxpert-newsletter-close" class="devxpert-newsletter-close" aria-label="<?php esc_attr_e('Close newsletter popup', 'devxpert-chatbot'); ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -16,7 +21,7 @@
         </button>
         
         <div class="devxpert-newsletter-content">
-            <p class="devxpert-newsletter-eyebrow"><?php echo esc_html($brand_name); ?> Insights</p>
+            <p class="devxpert-newsletter-eyebrow"><?php echo esc_html($brand_name); ?> <?php _e('Insights', 'devxpert-chatbot'); ?></p>
 
             <!-- Icon/Logo Area -->
             <div class="devxpert-newsletter-icon">
@@ -28,41 +33,41 @@
             
             <!-- Title -->
             <h2 id="devxpert-newsletter-title" class="devxpert-newsletter-title">
-                <?php echo esc_html(get_option('devxpert_newsletter_title', 'Stay Updated with ' . $brand_name)); ?>
+                <?php echo esc_html(get_option('devxpert_newsletter_title', sprintf(__('Stay Updated with %s', 'devxpert-chatbot'), $brand_name))); ?>
             </h2>
             
             <!-- Description -->
             <p id="devxpert-newsletter-description" class="devxpert-newsletter-description">
-                <?php echo esc_html(get_option('devxpert_newsletter_description', 'Get the latest insights on tech talent and enterprise architecture delivered to your inbox.')); ?>
+                <?php echo esc_html(get_option('devxpert_newsletter_description', __('Get the latest insights on tech talent and enterprise architecture delivered to your inbox.', 'devxpert-chatbot'))); ?>
             </p>
 
             <div class="devxpert-newsletter-benefits" aria-hidden="true">
-                <span class="devxpert-newsletter-benefit">Talent trends</span>
-                <span class="devxpert-newsletter-benefit">Delivery insights</span>
-                <span class="devxpert-newsletter-benefit">No spam</span>
+                <span class="devxpert-newsletter-benefit"><?php _e('Talent trends', 'devxpert-chatbot'); ?></span>
+                <span class="devxpert-newsletter-benefit"><?php _e('Delivery insights', 'devxpert-chatbot'); ?></span>
+                <span class="devxpert-newsletter-benefit"><?php _e('No spam', 'devxpert-chatbot'); ?></span>
             </div>
             
             <!-- Form -->
             <form id="devxpert-newsletter-form" class="devxpert-newsletter-form">
                 <div class="devxpert-newsletter-field">
-                    <label for="devxpert-newsletter-name" class="devxpert-sr-only">Your name</label>
+                    <label for="devxpert-newsletter-name" class="devxpert-sr-only"><?php _e('Your name', 'devxpert-chatbot'); ?></label>
                     <input 
                         type="text" 
                         id="devxpert-newsletter-name" 
                         name="name"
-                        placeholder="Your name"
+                        placeholder="<?php esc_attr_e('Your name', 'devxpert-chatbot'); ?>"
                         class="devxpert-newsletter-input"
                         autocomplete="name"
                     />
                 </div>
                 
                 <div class="devxpert-newsletter-field">
-                    <label for="devxpert-newsletter-email" class="devxpert-sr-only">Your email address</label>
+                    <label for="devxpert-newsletter-email" class="devxpert-sr-only"><?php _e('Your email address', 'devxpert-chatbot'); ?></label>
                     <input 
                         type="email" 
                         id="devxpert-newsletter-email" 
                         name="email"
-                        placeholder="Work email address"
+                        placeholder="<?php esc_attr_e('Work email address', 'devxpert-chatbot'); ?>"
                         required
                         class="devxpert-newsletter-input"
                         autocomplete="email"
@@ -74,11 +79,11 @@
                     id="devxpert-newsletter-submit" 
                     class="devxpert-newsletter-button"
                 >
-                    <?php echo esc_html(get_option('devxpert_newsletter_button_text', 'Subscribe Now')); ?>
+                    <?php echo esc_html(get_option('devxpert_newsletter_button_text', __('Subscribe Now', 'devxpert-chatbot'))); ?>
                 </button>
                 
                 <p class="devxpert-newsletter-privacy">
-                    One useful update at a time. Unsubscribe whenever you want.
+                    <?php _e('One useful update at a time. Unsubscribe whenever you want.', 'devxpert-chatbot'); ?>
                 </p>
             </form>
             
@@ -88,8 +93,8 @@
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                <h3>Thank You!</h3>
-                <p>You've successfully subscribed to our newsletter.</p>
+                <h3><?php _e('Thank You!', 'devxpert-chatbot'); ?></h3>
+                <p><?php _e("You've successfully subscribed to our newsletter.", 'devxpert-chatbot'); ?></p>
             </div>
             
             <!-- Error Message (hidden by default) -->
