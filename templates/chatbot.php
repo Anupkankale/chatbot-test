@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$chat_title    = get_option('devxpert_chatbot_title', get_option('devxpert_brand_name', 'DevXpert') . ' Talent Assistant');
+$chat_title    = get_option('devxpert_chatbot_title', get_option('devxpert_brand_name', 'DevXpert') . '  Assistant');
 $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
 ?>
 <div id="devxpert-chatbot-container" class="devxpert-chatbot-wrapper">
@@ -47,8 +47,7 @@ $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about talent, deli
             <!-- Input Area -->
             <div class="devxpert-input-area">
                 <form id="devxpert-chat-form" class="devxpert-input-form">
-                    <label for="devxpert-message-input" class="devxpert-sr-only"><?php _e('Type your message', 'devxpert-chatbot'); ?></label>
-                    <input 
+                     <input 
                         type="text" 
                         id="devxpert-message-input" 
                         class="devxpert-message-input" 

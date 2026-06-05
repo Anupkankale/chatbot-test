@@ -26,50 +26,52 @@ if (empty($questions_json)) {
     // Defaults - match current chatbot.js structure exactly
     $default = array(
         'welcome' => array(
-            'text' => "Hi, we're {$brand_name} 👋\n\nWe build high-performance digital products. How can we help grow your business today?",
-            'options' => array(
-                array('text' => '🌐 Build a custom website', 'intent' => 'new_site', 'leadType' => 'details'),
-                array('text' => '🛒 Launch an E-commerce store', 'intent' => 'ecommerce', 'leadType' => 'details'),
-                array('text' => '🛠️ App maintenance & support', 'intent' => 'maintenance', 'leadType' => 'call'),
-                array('text' => '📈 SEO & Performance audit', 'intent' => 'seo_audit', 'leadType' => 'call'),
-            )
+            'text' => "Hi, we're {$brand_name} 👋\n\nWe build high-performance websites and digital solutions that help businesses grow. How can we help you today?",
         ),
         'services' => array(
             array(
-                'id' => 10,
-                'text' => "Great choice.\n\nWe specialise in high-converting custom websites built with modern frameworks. We handle everything from UI/UX design to deployment.",
+                'text' => '🌐 Custom Website Development',
+                'message' => "Excellent.\n\nWe specialize in high-converting custom websites built with modern frameworks like WordPress, React, or Next.js. We handle everything from UI/UX design to deployment.",
+                'intent' => 'new_site',
+                'lead_type' => 'details',
                 'cta_primary' => '📋 Request a project quote',
                 'cta_secondary' => '📞 Book a discovery call',
             ),
             array(
-                'id' => 11,
-                'text' => "Understood.\n\nWe build robust E-commerce solutions using WooCommerce, Shopify, or custom headless setups to scale your online sales.",
+                'text' => '🛒 E-commerce Solutions',
+                'message' => "Got it.\n\nWe build robust E-commerce stores using WooCommerce or Shopify, optimized for speed and sales. Whether you're starting fresh or scaling up, we've got you covered.",
+                'intent' => 'ecommerce',
+                'lead_type' => 'details',
                 'cta_primary' => '📋 Get an e-commerce estimate',
                 'cta_secondary' => '📞 Talk to a retail expert',
             ),
             array(
-                'id' => 12,
-                'text' => "Makes sense.\n\nOur maintenance plans include security updates, speed optimization, and technical support to keep your site running 24/7.",
-                'cta_primary' => '📞 Discuss a support plan',
-                'cta_secondary' => '📋 Send my site details',
+                'text' => '🚀 Web App & SaaS Development',
+                'message' => "Great.\n\nOur team builds scalable web applications and SaaS products using cutting-edge tech stacks. We focus on performance, security, and a seamless user experience.",
+                'intent' => 'webapp',
+                'lead_type' => 'call',
+                'cta_primary' => '📞 Discuss my web app idea',
+                'cta_secondary' => '📋 Send my project brief',
             ),
             array(
-                'id' => 13,
-                'text' => "No problem.\n\nWe can audit your current site for speed, SEO, and conversion bottlenecks to give you an actionable growth roadmap.",
-                'cta_primary' => '📋 Get my free audit',
-                'cta_secondary' => '📞 Talk to a strategist',
+                'text' => '🛠️ Website Maintenance',
+                'message' => "Makes sense.\n\nWe provide ongoing maintenance, security updates, and performance optimization to keep your website running smoothly 24/7.",
+                'intent' => 'maintenance',
+                'lead_type' => 'call',
+                'cta_primary' => '📞 Discuss a support plan',
+                'cta_secondary' => '📋 Share my site details',
             ),
         ),
         'consultation' => array(
-            array('key' => 'name', 'text' => "Let's get started.\n\nWhat's your **full name?**", 'placeholder' => 'e.g. John Smith'),
-            array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can send over the right details?", 'placeholder' => 'you@company.com'),
-            array('key' => 'company', 'text' => "Which **company** or project is this for?", 'placeholder' => 'Acme Corp'),
-            array('key' => 'location', 'text' => "Where are you **located**?", 'placeholder' => 'City, Country'),
+            array('key' => 'name', 'text' => "Let's get started.\n\nWhat's your **full name?**"),
+            array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can send over the right details?"),
+            array('key' => 'company', 'text' => "Which **company** or project is this for?"),
+            array('key' => 'location', 'text' => "Where are you **located**?"),
             array('key' => 'industry', 'text' => "What is your **business industry**?\n\n- Retail / E-commerce\n- Professional Services\n- Tech / SaaS\n- Healthcare\n- Education\n- Real Estate\n- Other"),
             array('key' => 'platforms', 'text' => "Which **platform** are you interested in?\n\n- WordPress\n- React / Next.js\n- Shopify\n- Custom App\n- Not sure yet"),
             array('key' => 'capabilities', 'text' => "What is the **priority** for this project?\n\n- New Development\n- Redesign / UI Refresh\n- Speed & Optimization\n- New Features\n- Ongoing Maintenance"),
             array('key' => 'service_type', 'text' => "What is your **estimated budget** range?\n\n- Under $5k\n- $5k - $15k\n- $15k - $50k\n- $50k+\n- Not sure"),
-            array('key' => 'pain', 'text' => "Briefly describe your **project goals** or the problem you're solving.", 'placeholder' => 'e.g. We need to migrate our store to WordPress and improve loading speed.'),
+            array('key' => 'pain', 'text' => "Briefly describe your **project goals** or the problem you're solving."),
         ),
         'final' => array(
             'text' => "Thanks, **{name}**. We've received your project details.\n\nA senior strategist will review your requirements and reach out to **{email}** within 24 hours."
@@ -154,9 +156,8 @@ if (empty($questions_json)) {
                     </div>
                     <ul style="margin-left:18px;line-height:1.8;">
                         <li><strong>welcome.text</strong> — First message users see</li>
-                        <li><strong>welcome.options</strong> — The 4 initial service buttons</li>
-                        <li><strong>services</strong> — Response messages plus `cta_primary` and `cta_secondary` for conversion-focused actions</li>
-                        <li><strong>consultation</strong> — The 9 lead capture questions</li>
+                        <li><strong>services</strong> — Both the initial buttons (<code>text</code>) and the bot's response (<code>message</code>).</li>
+                        <li><strong>consultation</strong> — The lead capture questions</li>
                         <li><strong>final.text</strong> — Closing thank you message</li>
                     </ul>
                 </div>

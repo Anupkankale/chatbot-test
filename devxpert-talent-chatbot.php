@@ -53,14 +53,14 @@ class DEVXPERT_Talent_Chatbot {
      * Return the configured chatbot title.
      */
     private function get_chatbot_title() {
-        return get_option('devxpert_chatbot_title', $this->get_brand_name() . ' Talent Assistant');
+        return get_option('devxpert_chatbot_title', $this->get_brand_name() . ' Project Assistant');
     }
 
     /**
      * Return the configured chatbot subtitle.
      */
     private function get_chatbot_subtitle() {
-        return get_option('devxpert_chatbot_subtitle', 'Ask about talent, delivery support, or enterprise architecture.');
+        return get_option('devxpert_chatbot_subtitle', 'Ask about custom websites, e-commerce, or digital strategy.');
     }
 
     /**
@@ -1235,52 +1235,55 @@ class DEVXPERT_Talent_Chatbot {
 
         return array(
             'welcome' => array(
-                'text' => "Hi, we're " . $this->get_brand_name() . " 👋\n\nTell us what you're trying to solve and we'll point you to the fastest next step."
+                'text' => "Hi, we're " . $this->get_brand_name() . " 👋\n\nWe build high-performance websites and digital solutions that help businesses grow. How can we help you today?",
             ),
             'services' => array(
                 array(
-                    'text' => 'Hire tech talent fast',
-                    'message' => "Great choice.\n\nWe help teams hire vetted specialists across AI, Data, Cloud, SAP, Oracle, Salesforce and more, often with qualified profiles shared in about 72 hours.",
-                    'intent' => 'Hire tech talent / build a squad',
+                    'text' => '🌐 Custom Website Development',
+                    'message' => "Excellent.\n\nWe specialize in high-converting custom websites built with modern frameworks like WordPress, React, or Next.js. We handle everything from UI/UX design to deployment.",
+                    'intent' => 'new_site',
                     'lead_type' => 'details',
-                    'cta_primary' => '📋 Get matched candidate options',
-                    'cta_secondary' => '📞 Discuss my hiring need'
+                    'cta_primary' => '📋 Request a project quote',
+                    'cta_secondary' => '📞 Book a discovery call',
                 ),
                 array(
-                    'text' => 'Rescue a delayed project',
-                    'message' => "Understood.\n\nWe can quickly assess delivery issues, identify role or capability gaps, and help you stabilise the project with hands-on leadership support.",
-                    'intent' => 'Stabilise a troubled project',
-                    'lead_type' => 'call',
-                    'cta_primary' => '📞 Book a recovery call',
-                    'cta_secondary' => '📋 Send my project brief'
-                ),
-                array(
-                    'text' => 'Get architecture / IT strategy help',
-                    'message' => "Makes sense.\n\nWe provide architecture and strategy support to align delivery, platforms, and talent without locking you into a large consulting engagement.",
-                    'intent' => 'Enterprise Architecture / IT strategy',
-                    'lead_type' => 'call',
-                    'cta_primary' => '📞 Book a strategy call',
-                    'cta_secondary' => '📋 Share my roadmap challenge'
-                ),
-                array(
-                    'text' => 'I need help choosing the right option',
-                    'message' => "No problem.\n\nShare a little context and we'll recommend the best route, whether that's talent support, project rescue, or strategic guidance.",
-                    'intent' => 'Not sure / explore options',
+                    'text' => '🛒 E-commerce Solutions',
+                    'message' => "Got it.\n\nWe build robust E-commerce stores using WooCommerce or Shopify, optimized for speed and sales. Whether you're starting fresh or scaling up, we've got you covered.",
+                    'intent' => 'ecommerce',
                     'lead_type' => 'details',
-                    'cta_primary' => '📋 Recommend the right solution',
-                    'cta_secondary' => '📞 Talk it through with an expert'
-                )
+                    'cta_primary' => '📋 Get an e-commerce estimate',
+                    'cta_secondary' => '📞 Talk to a retail expert',
+                ),
+                array(
+                    'text' => '🚀 Web App & SaaS Development',
+                    'message' => "Great.\n\nOur team builds scalable web applications and SaaS products using cutting-edge tech stacks. We focus on performance, security, and a seamless user experience.",
+                    'intent' => 'webapp',
+                    'lead_type' => 'call',
+                    'cta_primary' => '📞 Discuss my web app idea',
+                    'cta_secondary' => '📋 Send my project brief',
+                ),
+                array(
+                    'text' => '🛠️ Website Maintenance',
+                    'message' => "Makes sense.\n\nWe provide ongoing maintenance, security updates, and performance optimization to keep your website running smoothly 24/7.",
+                    'intent' => 'maintenance',
+                    'lead_type' => 'call',
+                    'cta_primary' => '📞 Discuss a support plan',
+                    'cta_secondary' => '📋 Share my site details',
+                ),
             ),
             'consultation' => array(
-                array('key' => 'name', 'text' => "Let's get this moving.\n\nWhat's your **full name?**"),
-                array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can follow up with the right next step?"),
-                array('key' => 'company', 'text' => "Which **company** are you with?"),
-                array('key' => 'location', 'text' => "Where is your **team based**?\n(e.g. Dubai, UAE)"),
-                array('key' => 'industry', 'text' => "Which **industry** best matches your business?\n\n- Retail & Consumer\n- Manufacturing & Logistics\n- Banking & Financial Services\n- Government & Public Sector\n- Healthcare & Life Science\n- Telco & Media\n- Other"),
-                array('key' => 'platforms', 'text' => "Which **core platform or ecosystem** matters most here?\n\n- SAP\n- Oracle\n- Microsoft\n- Salesforce\n- Blue Yonder\n- Workday\n- Other / Not sure"),
-                array('key' => 'capabilities', 'text' => "Where is the **biggest capability gap** right now?\n\n- Data & AI\n- Digital & DevOps\n- Cloud & Infrastructure\n- Cybersecurity\n- Integration & Middleware\n- Emerging Technologies"),
-                array('key' => 'service_type', 'text' => "What type of **support** are you looking for?\n\n- Talent in a Box\n- TS/EA as a Service\n- Managed IT CoE\n- Not sure"),
-                array('key' => 'pain', 'text' => "What is the **main business or delivery challenge** you want solved?")
+                array('key' => 'name', 'text' => "Let's get started.\n\nWhat's your **full name?**"),
+                array('key' => 'email', 'text' => "Thanks **{name}**. What's your **work email** so we can send over the right details?"),
+                array('key' => 'company', 'text' => "Which **company** or project is this for?"),
+                array('key' => 'location', 'text' => "Where are you **located**?"),
+                array('key' => 'industry', 'text' => "What is your **business industry**?\n\n- Retail / E-commerce\n- Professional Services\n- Tech / SaaS\n- Healthcare\n- Education\n- Real Estate\n- Other"),
+                array('key' => 'platforms', 'text' => "Which **platform** are you interested in?\n\n- WordPress\n- React / Next.js\n- Shopify\n- Custom App\n- Not sure yet"),
+                array('key' => 'capabilities', 'text' => "What is the **priority** for this project?\n\n- New Development\n- Redesign / UI Refresh\n- Speed & Optimization\n- New Features\n- Ongoing Maintenance"),
+                array('key' => 'service_type', 'text' => "What is your **estimated budget** range?\n\n- Under $5k\n- $5k - $15k\n- $15k - $50k\n- $50k+\n- Not sure"),
+                array('key' => 'pain', 'text' => "Briefly describe your **project goals** or the problem you're solving.")
+            ),
+            'final' => array(
+                'text' => "Thanks, **{name}**. We've received your project details.\n\nA senior strategist will review your requirements and reach out to **{email}** within 24 hours."
             )
         );
     }
