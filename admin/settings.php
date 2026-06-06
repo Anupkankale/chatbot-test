@@ -8,11 +8,11 @@ if (!defined('ABSPATH')) {
         <div>
             <p class="devxpert-admin-eyebrow">Configuration</p>
             <h1 class="devxpert-admin-title"><?php echo esc_html(get_admin_page_title()); ?></h1>
-            <p class="devxpert-admin-subtitle">Manage chatbot visibility, newsletter capture, notifications, and SMTP delivery from one place.</p>
+            <p class="devxpert-admin-subtitle">Manage chatbot visibility, project qualification, and SMTP notifications from one place.</p>
         </div>
         <div class="devxpert-admin-actions">
             <span class="devxpert-admin-chip">Frontend chatbot</span>
-            <span class="devxpert-admin-chip">Newsletter popup</span>
+            <span class="devxpert-admin-chip">Lead capture</span>
             <span class="devxpert-admin-chip">SMTP delivery</span>
         </div>
     </div>
@@ -22,17 +22,10 @@ if (!defined('ABSPATH')) {
     <form method="post" action="options.php">
         <?php
         settings_fields('devxpert_chatbot_settings');
-        do_settings_sections('devxpert_chatbot_settings');
         $brand_name   = get_option('devxpert_brand_name', 'DevXpert');
         $chat_title   = get_option('devxpert_chatbot_title', $brand_name . ' Digital Project Assistant');
         $chat_subtitle = get_option('devxpert_chatbot_subtitle', 'Ask about custom websites, e-commerce, or performance optimization.');
         $brand_color  = get_option('devxpert_brand_accent_color', '#2563EB');
-        $telegram_webhook_url = rest_url('devxpert/v1/telegram/webhook');
-        $telegram_secret = get_option('devxpert_telegram_secret_token', '');
-        if ($telegram_secret === '') {
-            $telegram_secret = wp_generate_password(32, false, false);
-            update_option('devxpert_telegram_secret_token', $telegram_secret);
-        }
         ?>
 
         <div class="devxpert-admin-panel">
@@ -153,79 +146,6 @@ if (!defined('ABSPATH')) {
                         <textarea name="devxpert_chatbot_specific_pages" id="devxpert_chatbot_specific_pages"
                             rows="6" class="large-text code"><?php echo esc_textarea(get_option('devxpert_chatbot_specific_pages', '')); ?></textarea>
                         <p class="description">One page per line. Supports: full URL, partial URL (<code>/services</code>), <code>id:123</code>, <code>slug:about</code></p>
-                    </td>
-                </tr>
-            </tbody>
-            </table>
-        </div>
-
-        <div class="devxpert-admin-panel">
-            <div class="devxpert-admin-panel-heading">
-                <div>
-                    <span class="devxpert-admin-kicker">Newsletter</span>
-                    <h2 class="devxpert-admin-panel-title">Newsletter Popup Settings</h2>
-                    <p class="devxpert-admin-panel-copy">Configure when the popup appears and how the signup offer is presented to visitors.</p>
-                </div>
-            </div>
-            <table class="form-table" role="presentation">
-            <tbody>
-
-                <tr>
-                    <th scope="row"><label for="devxpert_newsletter_enabled">Enable Newsletter Popup</label></th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="devxpert_newsletter_enabled" id="devxpert_newsletter_enabled" value="1"
-                                <?php checked(get_option('devxpert_newsletter_enabled', false), true); ?> />
-                            Show newsletter subscription popup to visitors
-                        </label>
-                        <p class="description">Works independently — shows even if the chatbot is disabled.</p>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row"><label for="devxpert_newsletter_delay">Popup Delay (ms)</label></th>
-                    <td>
-                        <input type="number" name="devxpert_newsletter_delay" id="devxpert_newsletter_delay"
-                            value="<?php echo esc_attr(get_option('devxpert_newsletter_delay', 5000)); ?>"
-                            min="0" max="60000" step="1000" class="regular-text" />
-                        <p class="description">Default: 5000ms (5 seconds)</p>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row"><label for="devxpert_newsletter_title">Popup Title</label></th>
-                    <td>
-                        <input type="text" name="devxpert_newsletter_title" id="devxpert_newsletter_title"
-                            value="<?php echo esc_attr(get_option('devxpert_newsletter_title', 'Stay Updated with ' . $brand_name)); ?>"
-                            class="regular-text" />
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row"><label for="devxpert_newsletter_description">Popup Description</label></th>
-                    <td>
-                        <textarea name="devxpert_newsletter_description" id="devxpert_newsletter_description"
-                            rows="3" class="large-text"><?php echo esc_textarea(get_option('devxpert_newsletter_description', 'Get the latest insights on web development and digital optimization delivered to your inbox.')); ?></textarea>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row"><label for="devxpert_newsletter_button_text">Button Text</label></th>
-                    <td>
-                        <input type="text" name="devxpert_newsletter_button_text" id="devxpert_newsletter_button_text"
-                            value="<?php echo esc_attr(get_option('devxpert_newsletter_button_text', 'Subscribe Now')); ?>"
-                            class="regular-text" />
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row"><label for="devxpert_newsletter_show_once">Show Once Per Visitor</label></th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="devxpert_newsletter_show_once" id="devxpert_newsletter_show_once" value="1"
-                                <?php checked(get_option('devxpert_newsletter_show_once', true), true); ?> />
-                            Only show popup once every 30 days per visitor
-                        </label>
                     </td>
                 </tr>
             </tbody>
@@ -376,65 +296,6 @@ if (!defined('ABSPATH')) {
             </table>
         </div>
 
-        <div class="devxpert-admin-panel">
-            <div class="devxpert-admin-panel-heading">
-                <div>
-                    <span class="devxpert-admin-kicker">Telegram</span>
-                    <h2 class="devxpert-admin-panel-title">Telegram Live Chat</h2>
-                    <p class="devxpert-admin-panel-copy">Connect a Telegram bot to the same service menu, AI replies, and lead-capture flow used by the website chatbot.</p>
-                </div>
-            </div>
-            <table class="form-table" role="presentation">
-            <tbody>
-                <tr>
-                    <th scope="row"><label for="devxpert_telegram_enabled">Enable Telegram</label></th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="devxpert_telegram_enabled" id="devxpert_telegram_enabled" value="1"
-                                <?php checked(get_option('devxpert_telegram_enabled', false), true); ?> />
-                            Process Telegram bot messages through this plugin
-                        </label>
-                        <p class="description">When enabled, Telegram users can start with <code>/start</code> and continue into the lead form.</p>
-                    </td>
-                </tr>
-                <tr class="devxpert-telegram-field">
-                    <th scope="row"><label for="devxpert_telegram_bot_token">Bot Token</label></th>
-                    <td>
-                        <input type="password" name="devxpert_telegram_bot_token" id="devxpert_telegram_bot_token"
-                            value="<?php echo esc_attr(get_option('devxpert_telegram_bot_token', '')); ?>"
-                            class="regular-text code" autocomplete="new-password" placeholder="123456:ABC..." />
-                        <p class="description">Create your bot in Telegram via <code>@BotFather</code> and paste the bot token here.</p>
-                    </td>
-                </tr>
-                <tr class="devxpert-telegram-field">
-                    <th scope="row"><label for="devxpert_telegram_secret_token">Webhook Secret Token</label></th>
-                    <td>
-                        <input type="text" name="devxpert_telegram_secret_token" id="devxpert_telegram_secret_token"
-                            value="<?php echo esc_attr($telegram_secret); ?>"
-                            class="regular-text code" />
-                        <p class="description">Use the same secret when you register the Telegram webhook so the plugin can verify inbound requests.</p>
-                    </td>
-                </tr>
-                <tr class="devxpert-telegram-field">
-                    <th scope="row">Webhook URL</th>
-                    <td>
-                        <input type="text" readonly class="large-text code" value="<?php echo esc_attr($telegram_webhook_url); ?>" />
-                        <p class="description">Set this URL as your Telegram bot webhook after saving settings.</p>
-                    </td>
-                </tr>
-                <tr class="devxpert-telegram-field">
-                    <th scope="row">Setup Command</th>
-                    <td>
-                        <textarea readonly rows="4" class="large-text code">curl -X POST "https://api.telegram.org/bot&lt;YOUR_BOT_TOKEN&gt;/setWebhook" \
--d "url=<?php echo esc_attr($telegram_webhook_url); ?>" \
--d "secret_token=<?php echo esc_attr($telegram_secret); ?>"</textarea>
-                        <p class="description">Replace <code>&lt;YOUR_BOT_TOKEN&gt;</code> with the saved token, then run the command once.</p>
-                    </td>
-                </tr>
-            </tbody>
-            </table>
-        </div>
-
         <?php submit_button('💾 Save Settings'); ?>
     </form>
 </div>
@@ -462,13 +323,6 @@ jQuery(document).ready(function ($) {
     }
     toggleSmtpFields();
     $('#devxpert_smtp_enabled').on('change', toggleSmtpFields);
-
-    function toggleTelegramFields() {
-        var on = $('#devxpert_telegram_enabled').is(':checked');
-        $('.devxpert-telegram-field').toggleClass('smtp-hidden', !on);
-    }
-    toggleTelegramFields();
-    $('#devxpert_telegram_enabled').on('change', toggleTelegramFields);
 
     /* ── Show / hide password ────────────────────────── */
     $('#devxpert-toggle-password').on('click', function () {

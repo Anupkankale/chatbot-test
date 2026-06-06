@@ -36,4 +36,4 @@ Built with a modern **Navy, Blue, and Teal** aesthetic, the UI is designed to fe
 4. **Leads:** Review and manage all captured project enquiries in the **Sales Pipeline** view.
 
 ---
-*Built for agencies who build the web.*
+

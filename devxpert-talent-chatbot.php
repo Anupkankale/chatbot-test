@@ -913,6 +913,24 @@ class DEVXPERT_Talent_Chatbot {
             'devxpert-chatbot-newsletter',
             array($this, 'render_newsletter_page')
         );
+
+        add_submenu_page(
+            'devxpert-chatbot',
+            'Newsletter Settings',
+            '📢 Newsletter',
+            'manage_options',
+            'devxpert-chatbot-newsletter-settings',
+            array($this, 'render_newsletter_settings_page')
+        );
+
+        add_submenu_page(
+            'devxpert-chatbot',
+            'Telegram Bot',
+            '✈️ Telegram Bot',
+            'manage_options',
+            'devxpert-chatbot-telegram',
+            array($this, 'render_telegram_page')
+        );
     }
     
     /**
@@ -1039,6 +1057,20 @@ class DEVXPERT_Talent_Chatbot {
      */
     public function render_newsletter_page() {
         include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/newsletter.php';
+    }
+
+    /**
+     * Render newsletter settings page
+     */
+    public function render_newsletter_settings_page() {
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/newsletter-settings.php';
+    }
+
+    /**
+     * Render telegram settings page
+     */
+    public function render_telegram_page() {
+        include DEVXPERT_CHATBOT_PLUGIN_DIR . 'admin/telegram-settings.php';
     }
 
     /**
