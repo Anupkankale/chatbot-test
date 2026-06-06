@@ -92,7 +92,7 @@ if (!defined('ABSPATH')) {
             </table>
         </div>
 
-        <?php submit_button('💾 Save Telegram Settings'); ?>
+        <?php submit_button('Save Telegram Settings'); ?>
     </form>
 </div>
 

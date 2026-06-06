@@ -139,7 +139,7 @@ $brand_name = get_option('devxpert_brand_name', 'DevXpert');
                     
                     <p class="submit">
                         <button type="submit" name="devxpert_save_ai_settings" class="button button-primary button-large">
-                            💾 Save Settings
+                            Save Settings
                         </button>
                     </p>
                 </form>

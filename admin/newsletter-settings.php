@@ -102,6 +102,6 @@ if (!defined('ABSPATH')) {
             </table>
         </div>
 
-        <?php submit_button('💾 Save Newsletter Settings'); ?>
+        <?php submit_button('Save Newsletter Settings'); ?>
     </form>
 </div>

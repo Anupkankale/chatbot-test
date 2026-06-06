@@ -10,7 +10,9 @@ Built with a modern **Navy, Blue, and Teal** aesthetic, the UI is designed to fe
 
 ## Key Features
 - ** RAG-Powered AI (Claude):** Uses Retrieval-Augmented Generation to answer visitor questions based specifically on *your* website's content. No generic answers—only accurate information about your agency.
-- **Lead Capture Pipeline:** A structured "Consultation Flow" that qualifies leads by industry, budget, platform (WordPress, React, Shopify), and project goals.
+![alt text](image-1.png)
+- **Lead Capture Pipeline:** A structured "Consultation Flow" that qualifies leads by industry, budget, platform and project goals.
+![alt text](image-2.png)
 - **Audience Growth:** Integrated newsletter popup with customizable benefits and delayed triggers to build your email list.
 - ** Modern Admin UI:** A fully redesigned administration suite that matches the frontend aesthetic, providing a professional workspace for managing leads and settings.
 - ** Reliable Notifications:** Built-in SMTP configuration to ensure lead alerts and newsletter notifications always reach your inbox.

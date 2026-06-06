@@ -296,7 +296,7 @@ if (!defined('ABSPATH')) {
             </table>
         </div>
 
-        <?php submit_button('💾 Save Settings'); ?>
+        <?php submit_button('Save Settings'); ?>
     </form>
 </div>
 

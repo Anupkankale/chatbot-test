@@ -890,12 +890,12 @@ class DEVXPERT_Talent_Chatbot {
         add_submenu_page(
             'devxpert-chatbot',
             'AI Settings',
-            '🤖 AI Settings',
+            'AI Settings',
             'manage_options',
             'devxpert-chatbot-ai',
             array($this, 'render_ai_settings_page')
         );
-        
+
         add_submenu_page(
             'devxpert-chatbot',
             'Leads',
@@ -904,7 +904,7 @@ class DEVXPERT_Talent_Chatbot {
             'devxpert-chatbot-leads',
             array($this, 'render_leads_page')
         );
-        
+
         add_submenu_page(
             'devxpert-chatbot',
             'Newsletter Subscribers',
@@ -917,7 +917,7 @@ class DEVXPERT_Talent_Chatbot {
         add_submenu_page(
             'devxpert-chatbot',
             'Newsletter Settings',
-            '📢 Newsletter',
+            'Newsletter Settings',
             'manage_options',
             'devxpert-chatbot-newsletter-settings',
             array($this, 'render_newsletter_settings_page')
@@ -926,7 +926,7 @@ class DEVXPERT_Talent_Chatbot {
         add_submenu_page(
             'devxpert-chatbot',
             'Telegram Bot',
-            '✈️ Telegram Bot',
+            'Telegram Bot',
             'manage_options',
             'devxpert-chatbot-telegram',
             array($this, 'render_telegram_page')

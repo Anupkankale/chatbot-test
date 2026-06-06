@@ -125,7 +125,7 @@ if (empty($questions_json)) {
 
                     <p style="margin-top:25px;">
                         <button type="submit" name="devxpert_save_questions" class="button button-primary button-large">
-                            💾 Save Questions
+                            Save Questions
                         </button>
                         
                         <button 
@@ -135,7 +135,7 @@ if (empty($questions_json)) {
                             onclick="return confirm('Are you sure? This will reset all questions to defaults and cannot be undone.');"
                             style="margin-left:10px;"
                         >
-                            🔄 Reset to Defaults
+                            Reset to Defaults
                         </button>
                         
                         <a href="<?php echo admin_url('admin.php?page=devxpert-chatbot'); ?>" class="button" style="margin-left:10px;">
